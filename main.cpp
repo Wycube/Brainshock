@@ -3,7 +3,7 @@
 
 int main() {
 	std::cout << "Copyright Spencer Burton" << std::endl;
-	std::cout << "Brainshock Alpha 1" << std::endl;
+	std::cout << "Brainshock Preview 1" << std::endl;
 
 	std::string program;
 

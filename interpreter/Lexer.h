@@ -22,13 +22,13 @@ namespace bs {
 	class BasicLexer {
 		public:
 		virtual Sequence tokenize(const char *program) = 0;
-		virtual Sequence expr(Sequence seq) = 0;
+		virtual bool expr(Sequence seq) = 0;
 		virtual Sequence optimize(Sequence seq) = 0;
 	};
 
 	namespace frick { //This is standard brainf*** but I don's swear
 		enum Token {
-			RSHIFT='>', LSHIFT='<', INCREMENT='+', DECREMENT='-', OPENLOOP='[', CLOSELOOP=']', OUTPUT='.', INPUT=',', DEBUG='#'
+			RSHIFT='>', LSHIFT='<', INCREMENT='+', DECREMENT='-', OPENLOOP='[', CLOSELOOP=']', OUTPUT='.', INPUT=',', DEBUG='#', EOF='\0'
 		};
 		
 		class StdToken : public BasicToken {
@@ -37,7 +37,7 @@ namespace bs {
 
 			StdToken(const char symbol = ' ', const char *desc = "", int data = 0) : BasicToken(symbol, data), m_desc(desc) {}
 		
-			StdToken operator =(StdToken other) {
+			StdToken operator=(StdToken other) {
 				return StdToken(other.m_symbol, other.m_desc, other.m_data);
 			}
 		};
@@ -45,7 +45,7 @@ namespace bs {
 		class StdLexer : public BasicLexer {
 			public:
 			Sequence tokenize(const char *program);
-			Sequence expr(Sequence seq);
+			bool expr(Sequence seq);
 			Sequence optimize(Sequence seq);
 		};
 	}
