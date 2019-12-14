@@ -132,8 +132,6 @@ namespace bs {
 
 				std::chrono::duration<double, std::ratio<1, 1000>> insTime(1 / double(ips) * 1000); //Instruction time in milliseconds
 
-				elapsed.zero();
-
 				while(m_program.hasNext(m_instPtr)) {
 					start = std::chrono::steady_clock::now();
 
