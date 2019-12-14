@@ -6,6 +6,7 @@
 #include <iostream>
 #include <fstream>
 #include <chrono>
+#include <string>
 
 //Semantic Versioning
 int major = 0;
@@ -49,8 +50,7 @@ int main() {
 
 		std::string path;
 
-		while(path == "")
-			std::getline(std::cin, path);
+		while(std::getline(std::cin, path)) {}
 
 		std::ifstream file(path);
 
@@ -75,8 +75,7 @@ int main() {
 	} else {
 		std::cout << "Input Program:";
 
-		while(program == "")
-			std::getline(std::cin, program);
+		while(std::getline(std::cin, program)) {}
 	}
 
 	if(interp.loadProgram(program.c_str())) {
