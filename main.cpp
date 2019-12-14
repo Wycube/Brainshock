@@ -50,7 +50,8 @@ int main() {
 
 		std::string path;
 
-		while(std::getline(std::cin, path)) {}
+		while(path == "")
+			std::getline(std::cin, path);
 
 		std::ifstream file(path);
 
@@ -75,7 +76,8 @@ int main() {
 	} else {
 		std::cout << "Input Program:";
 
-		while(std::getline(std::cin, program)) {}
+		while(program == "")
+			std::getline(std::cin, program);
 	}
 
 	if(interp.loadProgram(program.c_str())) {
