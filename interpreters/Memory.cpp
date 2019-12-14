@@ -5,6 +5,18 @@
 namespace bs {
 
 	/**
+	 * Constructs an array of bytes of the specified size
+	 * initialized with all zeroes.
+	 */
+	 Tape::Tape(int size) {
+		m_cells = new unsigned char[size];
+
+		for(int i = 0; i < size; i++) {
+			m_cells[i] = 0;
+		}
+	 }
+
+	/**
 	 * Formats a string so that the char has a certain
 	 * number of spaces before it based on the number of digits.
 	 * Used for the printTape() function.

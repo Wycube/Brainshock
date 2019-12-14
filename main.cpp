@@ -4,12 +4,13 @@
 
 #include "interpreters/HWOI/HWOInterpreter.hpp"
 #include <iostream>
-#include <ctime>
+#include <fstream>
+#include <chrono>
 
 //Semantic Versioning
 int major = 0;
 int minor = 1;
-int patch = 0;
+int patch = 1;
 
 int main() {
 	std::cout << "Copyright (c) 2019 Spencer Burton" << std::endl;
@@ -17,11 +18,66 @@ int main() {
 	
 	bs::frick::StdHWInterpreter interp = bs::frick::StdHWInterpreter();
 
-	std::cout << "Input Program:";
-	
+	interp.m_flags.numInput = true;
+
+	bool useFile = false;
+
+	char result;
+
+	//Prompt whether to use a file for program
+	while(true) {
+
+		std::cout << "File y/n:" << std::endl;
+
+		std::cin >> result;
+
+		if(result == 'y') { 
+			useFile = true;
+			break;
+		} else if(result == 'n') {
+			useFile = false;
+			break;
+		}
+
+	}
+
 	std::string program;
 
-	std::cin >> program;
+	//Get pah of file and load it int 
+	if(useFile) {
+		std::cout << "Input File:";
+
+		std::string path;
+
+		while(path == "")
+			std::getline(std::cin, path);
+
+		std::ifstream file(path);
+
+		if(file.is_open()) {
+			int length;
+
+			file.seekg(0, std::ios::end);
+			length = file.tellg();
+			file.seekg(0, std::ios::beg);
+
+			char data[length];
+
+			file.read(data, length);
+
+			program = std::string(data);
+
+			file.close();
+		} else {
+			std::cout << "Unable to open file" << std::endl;
+			exit(1);
+		}
+	} else {
+		std::cout << "Input Program:";
+
+		while(program == "")
+			std::getline(std::cin, program);
+	}
 
 	if(interp.loadProgram(program.c_str())) {
 		std::cout << "successfully loaded program" << std::endl;
@@ -31,14 +87,17 @@ int main() {
 	}
 
 	//Benchmarking
-	std::clock_t start;
-
-	start = clock();
+	auto start = std::chrono::steady_clock::now();
 
 	//Run
 	interp.run();
 
-	double duration = (clock() - start) / (double) CLOCKS_PER_SEC;
+	//Benchmarking
+	auto end = std::chrono::steady_clock::now();
 
-	std::cout << "finished in " << CLOCKS_PER_SEC << " seconds" << std::endl;
+	auto duration = std::chrono::duration_cast<std::chrono::duration<double>>(end - start);
+
+	interp.m_tape.printTape(interp.m_cellPtr); 
+
+	std::cout << "finished in " << duration.count() << " seconds" << std::endl;
 }

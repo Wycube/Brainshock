@@ -32,7 +32,8 @@ namespace bs {
 		bool hasNext(int instPtr) {return instPtr < m_tokens.size();}
 
 		Operation& operator[] (int index) {
-			//Add boundary conditions
+			//Out-of-Bounds is undefined behavior
+
 			return m_tokens[index];
 		}
 	};

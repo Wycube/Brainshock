@@ -1,5 +1,7 @@
 #include "HWOInterpreter.hpp"
 #include <iostream>
+#include <chrono>
+#include <thread>
 #include <string>
 
 namespace bs {
@@ -84,7 +86,7 @@ namespace bs {
 					break;
 					case CLOSELOOP : if(!(m_tape.m_cells[m_cellPtr] == 0)) m_instPtr = current.m_data;
 					break;
-					case OUTPUT : std::cout << char(m_tape.m_cells[m_cellPtr]);
+					case OUTPUT : std::cout << char(m_tape.m_cells[m_cellPtr]) << std::flush;
 					break;
 					case INPUT : m_tape[m_cellPtr] = getInput();
 					break;
@@ -111,19 +113,40 @@ namespace bs {
 
 		/**
 		 * Runs as fast as possible by stepping once in while loop
-		 * until the end of the program is reached. TODO: add a speed parameter
+		 * until the end of the program is reached.
 		 *
-		 * @return True is the program ran successfully, false otherwise
+		 * @param ips Speed of execution in Instructions Per Second
 		 */
-		bool StdHWInterpreter::run() {
-			
-			while(m_program.hasNext(m_instPtr)) {
-				step();
+		void StdHWInterpreter::run(float ips) {	
+			if(ips < 0)
+				return;
+
+			if(ips == IPS_FAST) { //Run as fast as possible
+				while(m_program.hasNext(m_instPtr)) {
+					step();
+				}
+			} else { //Run varied speed
+				std::chrono::steady_clock::time_point start;
+				std::chrono::steady_clock::time_point end;
+				std::chrono::duration<double, std::ratio<1, 1000>> elapsed;
+
+				std::chrono::duration<double, std::ratio<1, 1000>> insTime(1 / double(ips) * 1000); //Instruction time in milliseconds
+
+				elapsed.zero();
+
+				while(m_program.hasNext(m_instPtr)) {
+					start = std::chrono::steady_clock::now();
+
+					step();
+
+					end = std::chrono::steady_clock::now();
+
+					elapsed = std::chrono::duration_cast<std::chrono::duration<double, std::ratio<1, 1000>>>(end - start);
+
+					if(elapsed.count() < insTime.count())
+						std::this_thread::sleep_for(insTime - elapsed);
+				}
 			}
-
-			m_tape.printTape(m_cellPtr);
-
-			return true;
 		}
 
 	}

@@ -75,7 +75,7 @@ namespace bs {
 					int index = loops[i].second + 1; //location after openloop to avoid counting twice
 					int open = 1;
 
-					while(index < program.m_tokens.size()) {
+					while(index <= program.m_tokens.size()) {
 						if(program[index].m_symbol == OPENLOOP)
 							open++;
 						else if(program[index].m_symbol == CLOSELOOP)
@@ -89,14 +89,15 @@ namespace bs {
 						index++;
 					}
 
-					if(open != 0)
+					if(open != 0) {
 						return false;
+					}
 
 				} else if(loops[i].first == CLOSELOOP) {
 					int index = loops[i].second - 1; //location before closeloop to avoid counting twice
 					int close = 1;
 
-					while(index > 0) {
+					while(index >= 0) {
 						if(program[index].m_symbol == CLOSELOOP)
 							close++;
 						else if(program[index].m_symbol == OPENLOOP)
@@ -110,8 +111,9 @@ namespace bs {
 						index--;
 					}
 
-					if(close != 0)
+					if(close != 0) {
 						return false;
+					}
 				}
 			}
 
