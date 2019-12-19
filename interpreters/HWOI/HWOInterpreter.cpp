@@ -99,7 +99,7 @@ namespace bs {
 				m_instPtr++;
 
 				if(m_debug) {
-					std::cout << "Cell:" << m_cellPtr << " Inst:" << current.m_symbol << " " << current.m_desc << " Data:" << current.m_data << std::endl;
+					std::cout << "Cell:" << m_cellPtr << "|Inst:'" << current.m_symbol << "'|" << current.m_desc << "|Data:" << current.m_data << std::endl;
 				}
 			}
 
