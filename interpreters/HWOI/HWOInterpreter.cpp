@@ -19,9 +19,9 @@ namespace bs {
 		 * @return True if the processing succeeded, false otherwise
 		 */
 		bool StdHWInterpreter::process(bs::Program& program, const char *string) {
-			m_lexer.tokenize(program, string);
+			m_lexer->tokenize(program, string);
 
-			if(!m_lexer.expr(program))
+			if(!m_lexer->expr(program))
 				return false;
 
 			return true;
@@ -74,13 +74,13 @@ namespace bs {
 				Operation current = m_program[m_instPtr];
 
 				switch(current.m_symbol) {
-					case RSHIFT : m_cellPtr++;
+					case RSHIFT : m_cellPtr += current.m_data;
 					break;
-					case LSHIFT : m_cellPtr--;
+					case LSHIFT : m_cellPtr -= current.m_data;
 					break;
-					case INCREMENT : m_tape[m_cellPtr]++;
+					case INCREMENT : m_tape[m_cellPtr] += current.m_data;
 					break;
-					case DECREMENT : m_tape.m_cells[m_cellPtr]--;
+					case DECREMENT : m_tape.m_cells[m_cellPtr] -= current.m_data;
 					break;
 					case OPENLOOP : if(m_tape.m_cells[m_cellPtr] == 0) m_instPtr = current.m_data;
 					break;

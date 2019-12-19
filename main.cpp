@@ -11,13 +11,13 @@
 //Semantic Versioning
 int major = 0;
 int minor = 1;
-int patch = 1;
+int patch = 2;
 
 int main() {
 	std::cout << "Copyright (c) 2019 Spencer Burton" << std::endl;
 	std::cout << "Brainshock Alpha v" << major << '.' << minor << '.' << patch << std::endl;
 	
-	bs::frick::StdHWInterpreter interp = bs::frick::StdHWInterpreter();
+	bs::frick::StdHWInterpreter interp(1);
 
 	interp.m_flags.numInput = true;
 

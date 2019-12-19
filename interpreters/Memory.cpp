@@ -1,5 +1,6 @@
 #include "Memory.hpp"
 #include <string>
+#include <cstring>
 #include <iostream>
 
 namespace bs {
@@ -10,10 +11,8 @@ namespace bs {
 	 */
 	 Tape::Tape(int size) {
 		m_cells = new unsigned char[size];
-
-		for(int i = 0; i < size; i++) {
-			m_cells[i] = 0;
-		}
+		
+		memset(m_cells, 0, size);
 	 }
 
 	/**

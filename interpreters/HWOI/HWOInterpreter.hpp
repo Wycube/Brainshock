@@ -47,7 +47,7 @@ namespace bs {
 			private:
 
 			bool m_debug = false;
-			StdLexer m_lexer;
+			Lexer *m_lexer;
 			std::queue<unsigned char> m_inBuffer;
 
 			bool process(Program& program, const char *string) override;
@@ -57,7 +57,15 @@ namespace bs {
 
 			StdFlags m_flags;
 
-			StdHWInterpreter() : HWInterpreter() {}
+			StdHWInterpreter(int lexer = 0) : HWInterpreter() {
+				if(lexer == 0) {
+					m_lexer = new StdLexer();
+				} else if(lexer == 1) {
+					m_lexer = new EffLexer();
+				}
+			}
+
+			~StdHWInterpreter() {delete m_lexer;}
 
 			bool step(int numSteps = 1) override;
 			void run(float ips = IPS_FAST) override;
