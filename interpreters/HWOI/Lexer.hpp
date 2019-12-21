@@ -20,7 +20,7 @@ namespace bs {
 	namespace frick {
 
 		/** All the different token symbols as an enum */
-		enum StdOperations {
+		enum StdInstruction {
 			RSHIFT='>', LSHIFT='<', INCREMENT='+', DECREMENT='-', OPENLOOP='[', CLOSELOOP=']', OUTPUT='.', INPUT=',', DEBUG='#'
 		};
 

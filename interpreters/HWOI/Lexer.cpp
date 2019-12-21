@@ -43,10 +43,10 @@ namespace bs {
 
 		/**
 		 * Converts a string of characters that represent a
-		 * Brainf*ck program to an array of Operations in
+		 * Brainf*ck program to an array of Instructions in
 		 * the standard Brainf version
 		 *
-		 * @param program The program class to be loaded with the operations
+		 * @param program The program class to be loaded with the instructions
 		 * @param instructions The string of instructions in a c-string
 		 */
 		void StdLexer::tokenize(Program& program, const char *instructions) {
@@ -58,23 +58,23 @@ namespace bs {
 				current = instructions[ptr++];
 				
 				switch(current) {
-					case RSHIFT : program.m_tokens.push_back(Operation(current, getDesc(current), 1));
+					case RSHIFT : program.m_tokens.push_back(Instruction(current, getDesc(current), 1));
 					break;
-					case LSHIFT : program.m_tokens.push_back(Operation(current, getDesc(current), 1));
+					case LSHIFT : program.m_tokens.push_back(Instruction(current, getDesc(current), 1));
 					break;
-					case INCREMENT : program.m_tokens.push_back(Operation(current, getDesc(current), 1));
+					case INCREMENT : program.m_tokens.push_back(Instruction(current, getDesc(current), 1));
 					break;
-					case DECREMENT : program.m_tokens.push_back(Operation(current, getDesc(current), 1));
+					case DECREMENT : program.m_tokens.push_back(Instruction(current, getDesc(current), 1));
 					break;
-					case OPENLOOP : program.m_tokens.push_back(Operation(current, getDesc(current), 1));
+					case OPENLOOP : program.m_tokens.push_back(Instruction(current, getDesc(current), 1));
 					break;
-					case CLOSELOOP : program.m_tokens.push_back(Operation(current, getDesc(current), 1));
+					case CLOSELOOP : program.m_tokens.push_back(Instruction(current, getDesc(current), 1));
 					break;
-					case OUTPUT : program.m_tokens.push_back(Operation(current, getDesc(current), 1));
+					case OUTPUT : program.m_tokens.push_back(Instruction(current, getDesc(current), 1));
 					break;
-					case INPUT : program.m_tokens.push_back(Operation(current, getDesc(current), 1));
+					case INPUT : program.m_tokens.push_back(Instruction(current, getDesc(current), 1));
 					break;
-					case DEBUG : program.m_tokens.push_back(Operation(current, getDesc(current), 1));
+					case DEBUG : program.m_tokens.push_back(Instruction(current, getDesc(current), 1));
 					break;
 					default: //Not one of the tokens, just skip
 					break;
@@ -84,7 +84,7 @@ namespace bs {
 
 		/**
 		 * Checks the input program for errors in OPENLOOP and
-		 * and CLOSELOOP operation placement and makes sure
+		 * and CLOSELOOP instruction placement and makes sure
 		 * they are in pairs, then sets their jump value
 		 * (ie data variable) accordingly.
 		 *
@@ -155,8 +155,8 @@ namespace bs {
 		}
 
 		/**
-		 * Optimizes an array of operations in order to have the
-		 * same behavior with less operations
+		 * Optimizes an array of instructions in order to have the
+		 * same behavior with less instructions
 		 * ex. removes +- or ><, >><<
 		 *	    turns ++- into + or >>><< into >
 		 *     removes [] at the beginning or
@@ -172,10 +172,10 @@ namespace bs {
 
 		/**
 		 * Converts a string of characters that represent a
-		 * Brainf*ck program to an array of Operations and 
-		 * condenses multiple sequential operations into one.
+		 * Brainf*ck program to an array of Instructions and 
+		 * condenses multiple sequential instructions into one.
 		 *
-		 * @param program The program class to be loaded with the operations
+		 * @param program The program class to be loaded with the instructions
 		 * @param instructions The string of instructions in a c-string
 		 */
 		void EffLexer::tokenize(Program& program, const char *instructions) {
@@ -192,25 +192,25 @@ namespace bs {
 				current = instructions[ptr++];
 				
 				switch(current) {
-					case RSHIFT : isToken = true; isRepeatable = true;//program.m_tokens.push_back(Operation(RSHIFT, "Shifts the data pointer 1 to the right", 1));
+					case RSHIFT : isToken = true; isRepeatable = true;
 					break;
-					case LSHIFT : isToken = true; isRepeatable = true;//program.m_tokens.push_back(Operation(LSHIFT, "Shifts the data pointer 1 to the left", 1));
+					case LSHIFT : isToken = true; isRepeatable = true;
 					break;
-					case INCREMENT : isToken = true; isRepeatable = true;//program.m_tokens.push_back(Operation(INCREMENT, "Increments the memory cell at the data pointer", 1));
+					case INCREMENT : isToken = true; isRepeatable = true;
 					break;
-					case DECREMENT : isToken = true; isRepeatable = true;//program.m_tokens.push_back(Operation(DECREMENT, "Decrements the memory cell at the data pointer", 1));
+					case DECREMENT : isToken = true; isRepeatable = true;
 					break;
-					case OPENLOOP : isToken = true; isRepeatable = false;//program.m_tokens.push_back(Operation(OPENLOOP, "Starts a loop, if current cell is 0 skip to close bracket, else continue"));
+					case OPENLOOP : isToken = true; isRepeatable = false;
 					break;
-					case CLOSELOOP : isToken = true; isRepeatable = false;//program.m_tokens.push_back(Operation(CLOSELOOP, "Ends a loop, if current cell is 0 continue past, if not jump to open loop"));
+					case CLOSELOOP : isToken = true; isRepeatable = false;
 					break;
-					case OUTPUT : isToken = true; isRepeatable = false;//program.m_tokens.push_back(Operation(OUTPUT, "Outputs the current memory cell as an ASCII character"));
+					case OUTPUT : isToken = true; isRepeatable = false;
 					break;
-					case INPUT : isToken = true; isRepeatable = false;//program.m_tokens.push_back(Operation(INPUT, "Set the current memory cell to a char from input"));
+					case INPUT : isToken = true; isRepeatable = false;
 					break;
-					case DEBUG : isToken = true; isRepeatable = false;//program.m_tokens.push_back(Operation(DEBUG, "Enables/Disables the debug info"));
+					case DEBUG : isToken = true; isRepeatable = false;
 					break;
-					default: isToken = false; isRepeatable = false;//Not one of the tokens, just skip
+					default: isToken = false; isRepeatable = false;
 					break;
 				}
 
@@ -227,7 +227,7 @@ namespace bs {
 								count++;
 								continue;
 							} else {
-								program.m_tokens.push_back(Operation(last, getDesc(last), count));
+								program.m_tokens.push_back(Instruction(last, getDesc(last), count));
 								count = 1;
 							}
 						} else {
@@ -235,16 +235,16 @@ namespace bs {
 						}
 					} else {
 						if(!isZero) {
-							program.m_tokens.push_back(Operation(last, getDesc(last), count));
+							program.m_tokens.push_back(Instruction(last, getDesc(last), count));
 							count = 0;
 						}
 
-						program.m_tokens.push_back(Operation(current, getDesc(current), 1));
+						program.m_tokens.push_back(Instruction(current, getDesc(current), 1));
 					}
 
 				} else {
 					if(!isZero) {
-						program.m_tokens.push_back(Operation(last, getDesc(last), count));
+						program.m_tokens.push_back(Instruction(last, getDesc(last), count));
 						count = 0;
 					}
 				}
@@ -255,7 +255,7 @@ namespace bs {
 
 		/**
 		 * Checks the input program for errors in OPENLOOP and
-		 * and CLOSELOOP operation placement and makes sure
+		 * and CLOSELOOP instructions placement and makes sure
 		 * they are in pairs, then sets their jump value
 		 * (ie data variable) accordingly.
 		 *
@@ -326,8 +326,8 @@ namespace bs {
 		}
 
 		/**
-		 * Optimizes an array of operations in order to have the
-		 * same behavior with less operations
+		 * Optimizes an array of instructions in order to have the
+		 * same behavior with less instructions
 		 * ex. removes +- or ><, >><<
 		 *	    turns ++- into + or >>><< into >
 		 *     removes [] at the beginning or

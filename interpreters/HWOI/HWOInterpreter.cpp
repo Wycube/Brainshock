@@ -68,7 +68,7 @@ namespace bs {
 		 * @return true if able to step the full number of steps, false otherwise
 		 */
 		bool StdHWInterpreter::step(int numSteps) {
-			int notDone = 0;
+			//int notDone = 0;
 
 			for(int i = 0; i < numSteps; i++) {
 				Operation current = m_program[m_instPtr];
@@ -92,7 +92,7 @@ namespace bs {
 					break;
 					case DEBUG : m_debug = !m_debug;
 					break;
-					default : notDone++;
+					default : //notDone++;
 					break;
 				}
 
@@ -103,10 +103,10 @@ namespace bs {
 				}
 			}
 
-			if(notDone > 0) {
-				std::cout << notDone << " Steps not done" << std::endl;
-				return false;
-			}
+			// if(notDone > 0) {
+			// 	std::cout << notDone << " Steps not done" << std::endl;
+			// 	return false;
+			// }
 		
 			return true;
 		}
