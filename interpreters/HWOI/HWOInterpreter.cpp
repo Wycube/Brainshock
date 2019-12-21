@@ -71,7 +71,7 @@ namespace bs {
 			//int notDone = 0;
 
 			for(int i = 0; i < numSteps; i++) {
-				Operation current = m_program[m_instPtr];
+				Instruction current = m_program[m_instPtr];
 
 				switch(current.m_symbol) {
 					case RSHIFT : m_cellPtr += current.m_data;
