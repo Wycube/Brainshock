@@ -93,7 +93,7 @@ namespace bs {
 		 * @return True if the programs loops are correct, false otherwise
 		 */
 		bool StdLexer::expr(Program& program) {
-			std::vector<std::pair<char, int>> loops;
+			std::vector<std::pair<char, int> > loops;
 
 			//Find indices of loops
 			for(int i = 0; i < program.m_tokens.size(); i++) {

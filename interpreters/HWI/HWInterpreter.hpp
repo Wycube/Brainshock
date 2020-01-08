@@ -25,11 +25,11 @@ namespace bs {
 		Program m_program;
 		int m_instPtr = 0;
 
-		HWInterpreter() : m_tape(), m_program() {}
-
 		bool loadProgram(const char *string) {return process(m_program, string);} //Loads program
 		virtual bool step(int numSteps = 1) = 0; //Steps a specified number of steps
 		virtual void run(float ips = IPS_FAST) = 0; //Runs the program, allows for certain speeds ips = instructions per second
+
+		HWInterpreter() : m_tape(), m_program() {}
 	};
 
 

@@ -3,14 +3,10 @@
 
 namespace bs {
 	
-	/** Memory used in Brainf, is a tape of bytes */
+	/** Memory used in Brainf, it is a tape of bytes */
 	struct Tape {
 		unsigned int m_size;
 		unsigned char *m_cells;
-
-		Tape(int size);
-		Tape() : Tape(30000) {} //30000 is standard size for Brainf
-		~Tape() {delete[] m_cells;}
 
 		void printTape(int cell);
 
@@ -19,6 +15,9 @@ namespace bs {
 
 			return m_cells[index];
 		}
+
+		Tape(int size = 0);
+		~Tape() {delete[] m_cells;}
 	};
 }
 

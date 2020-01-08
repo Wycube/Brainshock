@@ -2,7 +2,7 @@
  * Copyright (c) 2019 Spencer Burton
  */
 
-#include "interpreters/HWOI/HWOInterpreter.hpp"
+#include "interpreters/HWI/HWInterpreter.hpp"
 #include <iostream>
 #include <fstream>
 #include <chrono>
@@ -11,9 +11,9 @@
 //Semantic Versioning
 int major = 0;
 int minor = 1;
-int patch = 2;
+int patch = 3;
 
-int main() {
+int main(int argc, char *argv[]) {
 	std::cout << "Copyright (c) 2019 Spencer Burton" << std::endl;
 	std::cout << "Brainshock Alpha v" << major << '.' << minor << '.' << patch << std::endl;
 	
@@ -27,6 +27,10 @@ int main() {
 
 	//Prompt whether to use a file for program
 	while(true) {
+		if(argc > 1) {
+			useFile = true;
+			break;
+		}
 
 		std::cout << "File y/n:" << std::endl;
 
@@ -44,14 +48,19 @@ int main() {
 
 	std::string program;
 
-	//Get pah of file and load it int 
+	//Get path of file and load it int 
 	if(useFile) {
-		std::cout << "Input File:";
+		if(argc < 2)
+			std::cout << "Input File:";
 
 		std::string path;
 
-		while(path == "")
-			std::getline(std::cin, path);
+		if(argc < 2)
+			while(path == "")
+				std::getline(std::cin, path);
+
+		if(argc > 1)
+			path = argv[1];
 
 		std::ifstream file(path);
 
