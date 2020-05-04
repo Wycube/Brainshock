@@ -12,9 +12,9 @@ namespace bs {
 		Lexer() {}
 		virtual ~Lexer() {}
 
-		virtual void tokenize(Program& program, const char *instructions) = 0; //This method will construct a token[], and remove invalid Brainf symbols
-		virtual bool expr(Program& program) = 0; //Checks if expressions in the token[] are valid
-		virtual void optimize(Program& program) = 0; //Optimizes program to have same behavior, but less tokens
+		virtual void tokenize(Program &program, const char *instructions) = 0; //This method will construct a token[], and remove invalid Brainf symbols
+		virtual bool expr(Program &program) = 0; //Checks if expressions in the token[] are valid
+		virtual void optimize(Program &program) = 0; //Optimizes program to have same behavior, but less tokens
 	};
 
 	namespace frick {
@@ -30,9 +30,9 @@ namespace bs {
 
 			StdLexer() {}
 
-			void tokenize(Program& program, const char *instructions) override;
-			bool expr(Program& program) override;
-			void optimize(Program& program) override;
+			void tokenize(Program &program, const char *instructions) override;
+			bool expr(Program &program) override;
+			void optimize(Program &program) override;
 		};
 
 		/** Implementation of a more efficient Lexer class for standard Brainf */

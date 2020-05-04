@@ -25,19 +25,14 @@ namespace bs {
 	 * @return A std::string with the spaces and number
 	 */
 	std::string formatChar(unsigned char num) {
+		int intNum = static_cast<int>(num);
+
 		if(num < 10) {
-			return std::string("  ") + char(num + 48);
+			return std::string("  ") + std::to_string(intNum);
 		} else if(num < 100) {
-			char first = char(num / 10);
-			char second = num - first * 10;
-
-			return std::string(" ") + char(first + 48) + char(second + 48);
+			return std::string(" ") + std::to_string(intNum);
 		} else {
-			char first = char(num / 100);
-			char second = char((num - first * 100) / 10);
-			char third = num - (first * 100 + second * 10);
-
-			return std::string() + char(first + 48) + char(second + 48) + char(third + 48);
+			return std::string(std::to_string(intNum));
 		}
 	}
 

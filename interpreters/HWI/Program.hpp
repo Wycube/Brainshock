@@ -14,7 +14,7 @@ namespace bs {
 
 		Instruction(char symbol = ' ', const char *desc = "", int data = 0) : m_symbol(symbol), m_desc(desc), m_data(data) {}
 	
-		void operator= (Instruction other) {
+		inline void operator= (Instruction other) {
 			this->m_symbol = other.m_symbol;
 			this->m_desc =  other.m_desc;
 			this->m_data = other.m_data;
@@ -29,9 +29,9 @@ namespace bs {
 
 		Program(std::vector<Instruction> tokens = std::vector<Instruction>()) : m_tokens(tokens) {}
 
-		bool hasNext(int instPtr) {return instPtr < m_tokens.size();}
+		inline bool hasNext(int instPtr) {return instPtr < m_tokens.size();}
 
-		Instruction& operator[] (int index) {
+		inline Instruction& operator[] (int index) {
 			//Out-of-Bounds is undefined behavior
 
 			return m_tokens[index];

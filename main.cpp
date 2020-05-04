@@ -80,7 +80,7 @@ int main(int argc, char *argv[]) {
 			file.close();
 		} else {
 			std::cout << "Unable to open file" << std::endl;
-			exit(1);
+			return 1;
 		}
 	} else {
 		std::cout << "Input Program:";
@@ -93,7 +93,7 @@ int main(int argc, char *argv[]) {
 		std::cout << "successfully loaded program" << std::endl;
 	} else {
 		std::cout << "Error in program" << std::endl;
-		exit(1);
+		return 1;
 	}
 
 	//Benchmarking

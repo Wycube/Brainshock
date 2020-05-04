@@ -3,14 +3,14 @@
 
 namespace bs {
 	
-	/** Memory used in Brainf, it is a tape of bytes */
+	/** Memory used in Brainf, it is a array of bytes */
 	struct Tape {
 		unsigned int m_size;
 		unsigned char *m_cells;
 
 		void printTape(int cell);
 
-		unsigned char& operator[] (int index) {
+		inline unsigned char& operator[] (int index) {
 			//Out-of-Bounds is undefined behavior
 
 			return m_cells[index];

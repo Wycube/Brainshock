@@ -15,7 +15,7 @@ namespace bs {
 	class HWInterpreter {
 		private:
 
-		virtual bool process(Program& program, const char *string) = 0; //Tokenize and other processing steps(expression, optimizing etc.)
+		virtual bool process(Program &program, const char *string) = 0; //Tokenize and other processing steps(expression, optimizing etc.)
 		
 		public:
 
@@ -50,7 +50,7 @@ namespace bs {
 			Lexer *m_lexer;
 			std::queue<unsigned char> m_inBuffer;
 
-			bool process(Program& program, const char *string) override;
+			bool process(Program &program, const char *string) override;
 			unsigned char getInput();
 
 			public:

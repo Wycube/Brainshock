@@ -48,7 +48,7 @@ namespace bs {
 		 *
 		 * @return A reference to the memory tape object.
 		 */
-		Tape& getTape() {
+		inline Tape& getTape() {
 			return m_interpreter.m_memory;
 		}
 
@@ -57,11 +57,11 @@ namespace bs {
 		 *
 		 * @return A char from the input buffer
 		 */
-		char getInput() {
+		inline char getInput() {
 			return m_interpreter.getInput();
 		}
 
-		Interpreter_Interface(Interpreter& interpreter) : m_interpreter(interpreter) {}
+		Interpreter_Interface(Interpreter &interpreter) : m_interpreter(interpreter) {}
 	};
 
 }
