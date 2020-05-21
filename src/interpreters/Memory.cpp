@@ -1,7 +1,12 @@
 #include "Memory.hpp"
-#include <string>
+
 #include <cstring>
+#include <cmath>
+#include <cctype>
+#include <string>
 #include <iostream>
+#include <iomanip>
+#include <bitset>
 
 namespace bs {
 
@@ -79,10 +84,6 @@ namespace bs {
 	 * Formats a string so that the character has a certain
 	 * number of spaces before it based on the number of digits.
 	 * Used for the fPrint() function.
-	 *
-	 * @param num The byte for formatting
-	 *
-	 * @return A std::string with the spaces and number
 	 */
 	std::string formatChar(unsigned char num) {
 		int intNum = static_cast<int>(num);
@@ -98,7 +99,7 @@ namespace bs {
 
 	/**
 	 * Print the tape formatted like this.
-	 *                    26
+	 *                   26
 	 *                    v
 	 *   ...|  0| 10|120|  4| 12| 11|123|... 
 	 *
@@ -144,6 +145,7 @@ namespace bs {
 			arrowPos += (4 - (m_size - cell)) * 4;						
 		}
 
+		//Now print it
 		for(int i = 0; i < arrowPos - 1; i++) {
 			std::cout << " ";
 		}
@@ -155,6 +157,126 @@ namespace bs {
 		std::cout << "v" << std::endl;
 
 		std::cout << finalString << std::endl;
+	}
+
+	int numDigits(int number) {
+		std::string strNum = std::to_string(number);
+		return strNum.length();
+	}
+
+	/**
+	 *
+	 */
+	void Tape::fDump(DUMP_BASE base, bool ascii) {
+		std::size_t valuesPerLine, totalLines;
+		int baseDigits;
+
+		//Values chosen based on a 80x24 terminal window
+		if(base == BASE_HEX) {
+			valuesPerLine = 16;
+			baseDigits = 2;
+		} else if(base == BASE_DEC) {
+			valuesPerLine = 10;
+			baseDigits = 3;
+		} else if(base == BASE_BIN) {
+			valuesPerLine = 4;
+			baseDigits = 8;
+		} else {
+			valuesPerLine = 16;//Hex is default
+			baseDigits = 2;
+		}
+
+		totalLines = std::ceil(m_size / valuesPerLine);
+		int digits = numDigits(m_size);
+		int currentLine = 0;
+
+		//Checking for duplicates
+		std::stringstream lastLine;
+		std::stringstream currLine;
+		std::string endLine;
+		bool duplicate = false;
+
+		//ascii part
+		std::string asChar;
+
+		//Formatting
+		lastLine << std::setbase(base) << std::setfill('0');
+		currLine << std::setbase(base) << std::setfill('0');
+		std::cout << std::setfill('0');
+
+		for(std::size_t i = 0; i < totalLines; i++) {
+			
+			//Beginning deliminattor
+			if(ascii)
+				asChar = "(";
+
+			for(std::size_t j = 0; j < valuesPerLine; j++) {
+				//Print the number for a certain base
+				std::string seperator = j == (valuesPerLine / 2) - 1 ? "  " : " ";
+
+				unsigned char value = m_cells[j + i * valuesPerLine];
+
+				//ASCII value printing or a period if not printable
+				if(ascii) {
+					asChar += isprint(value) ? value : '.';
+				}
+
+				//Output streams don't support base 2 so I used bitsets
+				if(base == BASE_BIN)
+					currLine << std::bitset<8>(value) << seperator;
+				else
+					currLine << std::setw(baseDigits) << static_cast<int>(value) << seperator;
+			}
+
+			//Beginning deliminattor
+			if(ascii)
+				asChar += ")";
+
+			//Check for duplicate
+			if(currLine.str() == lastLine.str()) {
+				duplicate = true;
+
+				//Clear currLine after storing it
+				endLine = currLine.str();
+				currLine.str(std::string());
+			} else {
+
+				//Indicates duplicate lines
+				if(duplicate)
+					std::cout << "*" << std::endl;
+
+				duplicate = false;
+
+				//Print current line
+				std::cout << std::setw(digits) << currentLine << " : ";
+
+				if(ascii)
+					std::cout << currLine.str() << asChar << std::endl;
+				else
+					std::cout << currLine.str() << std::endl;
+
+				//Clear currLine after swap
+				lastLine.swap(currLine);
+				currLine.str(std::string());
+			}
+
+			currentLine += valuesPerLine;
+		}
+
+		//CurrentLine has to be lowered because it's at the end
+		if(duplicate) {
+			std::cout << "*" << std::endl;
+			std::cout << std::setw(digits) << (currentLine -= valuesPerLine) << " : ";
+			if(ascii)
+					std::cout << endLine << asChar << std::endl;
+				else
+					std::cout << endLine << std::endl;
+		}
+
+		//This is a big function, there is probably a better way to do this, idk
+
+		//Reset Attributes
+		std::cout << std::setbase(10) << std::setfill(' ');
 	}
 
 }

@@ -6,9 +6,9 @@
 namespace bs {
 	
 	enum DUMP_BASE {
-		BASE_HEX,
-		BASE_DEC,
-		BASE_BIN
+		BASE_HEX = 16,
+		BASE_DEC = 10,
+		BASE_BIN = 2
 	};
 
 	/** Memory used in Brainf, it is a array of bytes */
