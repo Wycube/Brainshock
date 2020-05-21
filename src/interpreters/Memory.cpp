@@ -80,11 +80,7 @@ namespace bs {
 
 
 
-		/**
-	 * Formats a string so that the character has a certain
-	 * number of spaces before it based on the number of digits.
-	 * Used for the fPrint() function.
-	 */
+	//Helper function for fPrint, formats number
 	std::string formatChar(unsigned char num) {
 		int intNum = static_cast<int>(num);
 
@@ -159,13 +155,18 @@ namespace bs {
 		std::cout << finalString << std::endl;
 	}
 
+	//Helper function for fDump
 	int numDigits(int number) {
 		std::string strNum = std::to_string(number);
 		return strNum.length();
 	}
 
 	/**
+	 * Sort of like hexdump but as a function on the tape.
+	 * Can print in 3 different bases defined in the DUMP_BASE enum.
 	 *
+	 * @param base The base to print the values as
+	 * @param ascii Whether or not the ascii value should be printed as well
 	 */
 	void Tape::fDump(DUMP_BASE base, bool ascii) {
 		std::size_t valuesPerLine, totalLines;
