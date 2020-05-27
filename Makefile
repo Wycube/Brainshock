@@ -1,10 +1,10 @@
-CXX = clang++
+CXX ?= clang++
 
-SRC_DIR = src
-OBJ_DIR = obj
-INC_DIR = src/include
+SRC_DIR := src
+OBJ_DIR := obj
+INC_DIR := src/include
 
-BUILD_TYPE = DEBUG
+BUILD_TYPE ?= DEBUG
 FLAGS = -Wall -I$(INC_DIR)
 
 ifeq ($(BUILD_TYPE), DEBUG) 
@@ -25,6 +25,8 @@ $(ODIR)/%.o: %.cpp $(DEPS)
 
 bsi: $(OBJ)
 	$(OBJ) $(FLAGS) -o $@ $^
+
+.PHONY clean
 
 clean:
 	rm -f $(ODIR)/*.o bsi
