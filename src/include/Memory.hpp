@@ -19,7 +19,6 @@ namespace bs {
 		Tape(std::size_t size = 0);
 		~Tape() {delete[] m_cells;}
 
-		//void printTape(int cell); //
 		void fPrint(int cell);
 		void fDump(DUMP_BASE base = BASE_HEX, bool ascii = false);
 

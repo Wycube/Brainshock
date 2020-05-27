@@ -2,7 +2,6 @@
  * Copyright (c) 2019 Spencer Burton
  */
 
-#include "interpreters/HWI/HWInterpreter.hpp"
 #include <iostream>
 #include <fstream>
 #include <chrono>

@@ -1,4 +1,4 @@
-#include "src/interpreters/Memory.hpp"
+#include "src/interpreter/Memory.hpp"
 #include <cstdlib>
 
 int main(int argc, char *argv[]) {
