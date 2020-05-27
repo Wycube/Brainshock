@@ -1,6 +1,11 @@
 CXX = clang++
+
+SRC_DIR = src
+OBJ_DIR = obj
+INC_DIR = src/include
+
 BUILD_TYPE = DEBUG
-FLAGS = -Wall
+FLAGS = -Wall -I$(INC_DIR)
 
 ifeq ($(BUILD_TYPE), DEBUG) 
 	FLAGS = -g $(FLAGS)
@@ -8,10 +13,6 @@ else
 	ifeq ($(BUILD_TYPE), RELEASE)
 		FLAGS = -O2 $(FLAGS)
 endif
-
-SRC_DIR = src
-OBJ_DIR = obj
-INC_DIR = src/include
 
 _DEPS = Interpreter.hpp Memory.hpp Program.hpp
 DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))
