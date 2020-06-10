@@ -1,6 +1,8 @@
 #include "Brainf.hpp"
 
 #include <iostream>
+#include <chrono>
+#include <thread>
 
 enum BrainfInstructions {
 	SHIFT_RIGHT = '>',
@@ -19,11 +21,14 @@ namespace bs {
 		m_memory = Tape(memSize);
 	}
 
-	bool stepProcessed(unsigned int numInstructions) {
+	bool BrainfInterpreter::stepProcessed(size_t numInstructions) {
 		if(tokens.empty())
 				return false;
 
 		for(size_t i = 0; i < numInstructions; i++) {
+			if(m_instPtr > m_program.length())
+				return false;
+
 			Token inst = m_program.tokens[m_instPtr++];
 
 			switch(inst.identifier) {
@@ -46,6 +51,8 @@ namespace bs {
 				default : break;
 			}
 		}
+
+		return true;
 	}
 
 	size_t handleStartLoop(unsigned char value, Program &program, size_t instPtr) {
@@ -65,9 +72,12 @@ namespace bs {
 		}
 	}
 
-	bool stepUnprocessed(unsigned int numInstructions) {
-		for(size_t i = 0; i < m_program.program.length(); i++) {
-			char inst = m_program.program[i];
+	bool BrainfInterpreter::stepUnprocessed(size_t numInstructions) {
+		for(size_t i = 0; i < numInstructions; i++) {
+			if(m_instPtr > m_program.length())
+				return false;
+
+			char inst = m_program.program[m_instPtr++];
 
 			switch(inst) {
 				case SHIFT_RIGHT : m_dataPtr++;
@@ -99,6 +109,8 @@ namespace bs {
 				default : break;
 			}
 		}
+
+		return true;
 	}
 
 	/**
@@ -109,8 +121,11 @@ namespace bs {
 	*
 	* @return True if all the instructions were executed successfully.
 	*/
-	bool BrainfInterpreter::step(unsigned int numInstructions) {
-		
+	bool BrainfInterpreter::step(size_t numInstructions) {
+		if(m_program.processed)
+			return stepProcessed(numInstructions);
+		else
+			return stepUnprocessed(numInstructions);
 	}
 
 	/**
@@ -124,7 +139,37 @@ namespace bs {
 	* @return True if the program executed successfully.
 	*/
 	bool BrainfInterpreter::run(float runSpeed) {
+		if(runSpeed < 0)
+			runSpeed = 0; //Just do zero for anything negative
 
+		bool regulate = !(runSpeed == 0);
+
+		int milliPerInst = regulate ? 1 / runspeed : 0;
+		std::chrono::milliseconds delta;
+		auto execTime = std::chrono::milliseconds(milliPerInst);
+		auto currentTime = std::chrono::steady_clock::now();
+		auto lastTime = currentTime;
+
+		if(!regulate) {
+			for(size_t i = m_instPtr; i < program.length(); i++) {
+			step();
+			}
+		} else {
+			for(size_t i = m_instPtr; i < progSize; i++) {
+					currentTime = std::chrono::steady_clock::now();
+					delta = currentTime - lastTime;
+					lastTime = currentTime;
+
+				//Should the execution be stopped for a bit to stay in time
+				if(delta > execTime) {
+					std::this_thread::sleep_for(delta - execTime);
+				}
+
+				if(!step()) return false;
+			}
+		}
+
+		return true;
 	}
 
 	/**
@@ -134,7 +179,27 @@ namespace bs {
 	* @return Whether or not m_program has valid syntax.
 	*/
 	bool BrainfInterpreter::expr() {
+		std::deque<unsigned int> openLoops;
 
+		for(size_t i = 0; i < m_program.length(); i++) {
+			if(m_program[i] == '[') {
+				openLoops.push_back(i);
+			} else if(m_program[i] == ']') {
+				if(openLoops.empty()) {
+					return false;
+				}
+
+				//Assign jump back address
+				m_program.tokens[i].data = openLoops.peek();
+
+				//Assign jump forward address
+				m_program.tokens[openLoops.peek()].data = i;
+
+				openLoops.pop_back();
+			}
+		}
+
+		return openLoops.empty();
 	}
 
 	/**

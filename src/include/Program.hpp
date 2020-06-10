@@ -8,17 +8,25 @@ namespace bs {
 
 	struct Token {
 		char identifier;
-		int data;
+		unsigned int data;
 	};
 
 	struct Program {
-	public:
 
 	std::string program;
 	std::vector<Token> tokens;
 	bool processed;
 
 	void tokenize();
+	size_t length();
+
+	inline char& operator[](size_t index) {
+		if(processed) {
+			return tokens[index].identifier;
+		} else {
+			return program[index];
+		}
+	}
 	};
 
 }
