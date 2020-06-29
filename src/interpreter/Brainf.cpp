@@ -4,6 +4,8 @@
 #include <chrono>
 #include <thread>
 
+namespace bs {
+
 enum BrainfInstructions {
 	SHIFT_RIGHT = '>',
 	SHIFT_LEFT = '<',
@@ -12,20 +14,22 @@ enum BrainfInstructions {
 	START_LOOP = '[',
 	END_LOOP = ']',
 	INPUT = ',',
-	OUTPUT = '.'
+	OUTPUT = '.',
+	//Extended Tokens for optimization
+	CLEAR = 'z',
+	COPY = 'c'
 }
 
-namespace bs {
 
-	BrainfInterpreter::BrainfInterpreter(size_t memSize) {
+	BrainfInterpreter::BrainfInterpreter(std::size_t memSize) {
 		m_memory = Tape(memSize);
 	}
 
-	bool BrainfInterpreter::stepProcessed(size_t numInstructions) {
+	bool BrainfInterpreter::stepProcessed(std::size_t numInstructions) {
 		if(tokens.empty())
 				return false;
 
-		for(size_t i = 0; i < numInstructions; i++) {
+		for(std::size_t i = 0; i < numInstructions; i++) {
 			if(m_instPtr > m_program.length())
 				return false;
 
@@ -55,10 +59,10 @@ namespace bs {
 		return true;
 	}
 
-	size_t handleStartLoop(unsigned char value, Program &program, size_t instPtr) {
+	size_t handleStartLoop(unsigned char value, Program &program, std::size_t instPtr) {
 		if(!value) {
 			//Search forn ending bracket
-			size_t i = instPtr;
+			std::size_t i = instPtr;
 			char inst = m_program.program[i];
 
 			while(inst != ']') {
@@ -72,8 +76,8 @@ namespace bs {
 		}
 	}
 
-	bool BrainfInterpreter::stepUnprocessed(size_t numInstructions) {
-		for(size_t i = 0; i < numInstructions; i++) {
+	bool BrainfInterpreter::stepUnprocessed(std::size_t numInstructions) {
+		for(std::size_t i = 0; i < numInstructions; i++) {
 			if(m_instPtr > m_program.length())
 				return false;
 
@@ -121,7 +125,7 @@ namespace bs {
 	*
 	* @return True if all the instructions were executed successfully.
 	*/
-	bool BrainfInterpreter::step(size_t numInstructions) {
+	bool BrainfInterpreter::step(std::size_t numInstructions) {
 		if(m_program.processed)
 			return stepProcessed(numInstructions);
 		else
@@ -151,11 +155,11 @@ namespace bs {
 		auto lastTime = currentTime;
 
 		if(!regulate) {
-			for(size_t i = m_instPtr; i < program.length(); i++) {
+			for(std::size_t i = m_instPtr; i < program.length(); i++) {
 			step();
 			}
 		} else {
-			for(size_t i = m_instPtr; i < progSize; i++) {
+			for(std::size_t i = m_instPtr; i < progSize; i++) {
 					currentTime = std::chrono::steady_clock::now();
 					delta = currentTime - lastTime;
 					lastTime = currentTime;
@@ -181,7 +185,7 @@ namespace bs {
 	bool BrainfInterpreter::expr() {
 		std::deque<unsigned int> openLoops;
 
-		for(size_t i = 0; i < m_program.length(); i++) {
+		for(std::size_t i = 0; i < m_program.length(); i++) {
 			if(m_program[i] == '[') {
 				openLoops.push_back(i);
 			} else if(m_program[i] == ']') {
@@ -203,12 +207,134 @@ namespace bs {
 	}
 
 	/**
+	 * Just a little helper function to
+	 * tell if the two instructions oppose, or do the 
+	 * opposite of eachother.
+	 */
+	bool isOpposing(char first, char second) {
+		switch(first) {
+			case SHIFT_RIGHT : return second == SHIFT_LEFT;
+			case SHIFT_LEFT : return second == SHIFT_RIGHT;
+			case INCREMENT : return second == DECREMENT;
+			case DECREMENT : return second == INCREMENT;
+			default : return false;
+		}
+	}
+
+	/**
 	* This method will do the optimization like folding repetive 
 	* instructions into one and other creative things I can find
 	* or think of, without modifying the behavior.
 	*/
 	void BrainfInterpreter::preProcess() {
-		//Optimizations *yay*
+		std::vector<Token> newTokens;
+
+		std::size_t i;
+
+		//First Pass
+		while(i < m_program.length()) {
+			char current = m_program.tokens[i].identifier;
+			char previous = i > 0 ? m_program.tokens[i - 1].identifier : 0;
+			char next = i < m_.program.length() - 1 ? m_program.tokens[i + 1].identifier : 0;
+			
+
+			if(current == SHIFT_LEFT || current == SHIFT_RIGHT ||
+				 current == INCREMENT  || current == DECREMENT) {
+				//Counts instructions and uses that as data for a single
+				//instruction, like run length encoding
+
+				int sum = 1;
+				char temp = next;
+
+				while(temp == current) {
+					sum++;
+					temp = m_program.tokens[i + sum].identifier;
+				}
+
+				newTokens.push_back(Token(current, sum));
+
+				i += sum + 1;
+			} else if(current == OPEN_LOOP) {
+				
+				//Check for very beginning of program
+				//These are usually comments
+				if(!i) {
+					int count = 1;
+
+					while(m_program.tokens[i].identifier != CLOSE_LOOP) {
+						count++;
+					}
+
+					i += count + 1;
+				} else if(next == DECREMENT || next == INCREMENT) {
+					//Checks for the clear instruction
+					if(m_program.tokens[i + 2].identifier == CLOSE_LOOP) {
+						newTokens.push_back(Token(CLEAR, 1));
+
+						i += 3;
+					}
+				} else if(previous == CLOSE_LOOP) {
+					//Gets rid of loops that occur right after another loop
+					char temp = next;
+					int count = 1;
+
+					while(temp != CLOSE_LOOP) {
+						count++;
+						temp = m_program.tokens[i + count];
+					}
+
+					i += count;
+				} else if(next == DECREMENT) {
+					//Check for copy instruction
+					std::string expected = ">+>+<<]";//Sequence is [->+>+<<]
+					std::string actual;
+
+					for(std::size_t j = 0; j < 7; j++) {
+						actual += m_program.tokens[i + j].identifier;
+					}
+
+					newTokens.push_back(Token(COPY, 1));
+
+					i += 9;
+				}
+			}
+		}
+
+		//Replace the token lists in m_program
+		m_program.tokens.swap(newTokens);
+		newTokens.clear();
+
+
+		//Second Pass
+		while(i < m_program.length()) {
+			char current = m_program.tokens[i].identifier;
+			char next = i < m_.program.length() - 1 ? m_program.tokens[i + 1].identifier : 0;
+
+			//Optimize for opposing operators <> +- ><
+			if(current == SHIFT_LEFT || current == SHIFT_RIGHT ||
+				 current == INCREMENT  || current == DECREMENT) {
+				
+				if(isOpposing(current, next)) {
+					if(m_program.tokens[i].data == m_program.tokens[i + 1].data) {
+						//Remove both
+						m_program.tokens.erase(m_program.tokens.begin() + i);
+						m_program.tokens.erase(m_program.tokens.begin() + i + 1);
+					} else if(m_program.tokens[i].data > m_program.tokens[i + 1].data) {
+						//Take away the seconds' data, from the firsts', and then remove it
+						m_program.tokens[i].data -= m_program.tokens[i + 1].data;
+						m_program.tokens.erase(m_program.tokens.begin() + i + 1);
+						i++;
+					} else {
+						//Take away the firsts' data, from the seconds', then remove it
+						m_program.tokens[i + 1].data -= m_program.tokens[i].data;
+						m_program.tokens.erase(m_program.tokens.begin() + i);
+						i++;
+					}
+				}
+			}
+		}
+
+		m_program.processed = true;
 	}
 
 }

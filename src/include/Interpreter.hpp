@@ -54,7 +54,7 @@ namespace bs {
 	}
 
 	inline char Interpreter::getChar() {
-		unsigned char temp;
+		char temp;
 
 		if(m_inBuffer.empty()) {
 			std::string input;

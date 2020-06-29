@@ -8,10 +8,10 @@ namespace bs {
 	class BrainfInterpreter : public Interpreter {
 	public:
 
-		BrainfInterpreter(size_t memSize = 30000);
+		BrainfInterpreter(std::size_t memSize = 30000);
 
 		bool run(float runSpeed = 0);
-		bool step(size_t numInstructions = 1);
+		bool step(std::size_t numInstructions = 1);
 
 	private:
 

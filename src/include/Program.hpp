@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <cstddef>
 
 namespace bs {
 
@@ -18,9 +19,9 @@ namespace bs {
 	bool processed;
 
 	void tokenize();
-	size_t length();
+	std::size_t length();
 
-	inline char& operator[](size_t index) {
+	inline char& operator[](std::size_t index) {
 		if(processed) {
 			return tokens[index].identifier;
 		} else {
