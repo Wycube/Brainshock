@@ -52,7 +52,12 @@ enum BrainfInstructions {
 				break;
 				case OUTPUT : std::cout << m_memory[m_dataPtr];
 				break;
-				default : break;
+				case CLEAR : m_memory[m_dataPtr] = 0;
+				break;
+				case COPY : m_memory[m_dataPtr + 1] = m_memory[m_dataPtr];
+					          m_mempry[m_dataPtr + 2] = m_memory[m_dataPtr];
+										m_memory[m_dataPtr] = 0;
+				break;
 			}
 		}
 
@@ -110,7 +115,6 @@ enum BrainfInstructions {
 				break;
 				case OUTPUT : std::cout << m_memory[m_dataPtr];
 				break;
-				default : break;
 			}
 		}
 
