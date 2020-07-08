@@ -1,6 +1,5 @@
 #include "Brainf.hpp"
 
-#include <iostream>
 #include <chrono>
 #include <thread>
 
@@ -18,7 +17,7 @@ enum BrainfInstructions {
 	//Extended Tokens for optimization
 	CLEAR = 'z',
 	COPY = 'c'
-}
+};
 
 
 	BrainfInterpreter::BrainfInterpreter(std::size_t memSize) {
@@ -26,7 +25,7 @@ enum BrainfInstructions {
 	}
 
 	bool BrainfInterpreter::stepProcessed(std::size_t numInstructions) {
-		if(tokens.empty())
+		if(m_program.tokens.empty())
 				return false;
 
 		for(std::size_t i = 0; i < numInstructions; i++) {
@@ -55,7 +54,7 @@ enum BrainfInstructions {
 				case CLEAR : m_memory[m_dataPtr] = 0;
 				break;
 				case COPY : m_memory[m_dataPtr + 1] = m_memory[m_dataPtr];
-					          m_mempry[m_dataPtr + 2] = m_memory[m_dataPtr];
+					          m_memory[m_dataPtr + 2] = m_memory[m_dataPtr];
 										m_memory[m_dataPtr] = 0;
 				break;
 			}
@@ -68,10 +67,10 @@ enum BrainfInstructions {
 		if(!value) {
 			//Search forn ending bracket
 			std::size_t i = instPtr;
-			char inst = m_program.program[i];
+			char inst = program.program[i];
 
 			while(inst != ']') {
-				inst = m_program.program[++i];
+				inst = program.program[++i];
 			}
 
 			return i;
@@ -87,6 +86,7 @@ enum BrainfInstructions {
 				return false;
 
 			char inst = m_program.program[m_instPtr++];
+			std::size_t jumpValue;
 
 			switch(inst) {
 				case SHIFT_RIGHT : m_dataPtr++;
@@ -98,7 +98,7 @@ enum BrainfInstructions {
 				case DECREMENT : m_memory[m_dataPtr]--;
 				break;
 				case START_LOOP :
-					size_t jumpValue = handleStartLoop(m_memory[m_dataPtr], m_program, m_instPtr);
+					jumpValue = handleStartLoop(m_memory[m_dataPtr], m_program, m_instPtr);
 
 					if(!jumpValue)
 						m_jumpTable.push_back(m_instPtr);
@@ -152,20 +152,20 @@ enum BrainfInstructions {
 
 		bool regulate = !(runSpeed == 0);
 
-		int milliPerInst = regulate ? 1 / runspeed : 0;
+		int milliPerInst = regulate ? 1 / runSpeed : 0;
 		std::chrono::milliseconds delta;
 		auto execTime = std::chrono::milliseconds(milliPerInst);
 		auto currentTime = std::chrono::steady_clock::now();
 		auto lastTime = currentTime;
 
 		if(!regulate) {
-			for(std::size_t i = m_instPtr; i < program.length(); i++) {
+			for(std::size_t i = m_instPtr; i < m_program.length(); i++) {
 			step();
 			}
 		} else {
-			for(std::size_t i = m_instPtr; i < progSize; i++) {
+			for(std::size_t i = m_instPtr; i < m_program.length(); i++) {
 					currentTime = std::chrono::steady_clock::now();
-					delta = currentTime - lastTime;
+					delta = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - lastTime);
 					lastTime = currentTime;
 
 				//Should the execution be stopped for a bit to stay in time
@@ -198,10 +198,10 @@ enum BrainfInstructions {
 				}
 
 				//Assign jump back address
-				m_program.tokens[i].data = openLoops.peek();
+				m_program.tokens[i].data = openLoops.back();
 
 				//Assign jump forward address
-				m_program.tokens[openLoops.peek()].data = i;
+				m_program.tokens[openLoops.back()].data = i;
 
 				openLoops.pop_back();
 			}
@@ -233,21 +233,20 @@ enum BrainfInstructions {
 	void BrainfInterpreter::preProcess() {
 		std::vector<Token> newTokens;
 
-		std::size_t i;
+		std::size_t i = 0;
 
 		//First Pass
 		while(i < m_program.length()) {
 			char current = m_program.tokens[i].identifier;
 			char previous = i > 0 ? m_program.tokens[i - 1].identifier : 0;
-			char next = i < m_.program.length() - 1 ? m_program.tokens[i + 1].identifier : 0;
-			
+			char next = i < m_program.length() - 1 ? m_program.tokens[i + 1].identifier : 0;
 
 			if(current == SHIFT_LEFT || current == SHIFT_RIGHT ||
 				 current == INCREMENT  || current == DECREMENT) {
 				//Counts instructions and uses that as data for a single
 				//instruction, like run length encoding
 
-				int sum = 1;
+				unsigned int sum = 1;
 				char temp = next;
 
 				while(temp == current) {
@@ -255,36 +254,36 @@ enum BrainfInstructions {
 					temp = m_program.tokens[i + sum].identifier;
 				}
 
-				newTokens.push_back(Token(current, sum));
+				newTokens.push_back(Token{current, sum});
 
 				i += sum + 1;
-			} else if(current == OPEN_LOOP) {
+			} else if(current == START_LOOP) {
 				
 				//Check for very beginning of program
 				//These are usually comments
 				if(!i) {
 					int count = 1;
 
-					while(m_program.tokens[i].identifier != CLOSE_LOOP) {
+					while(m_program.tokens[i].identifier != END_LOOP) {
 						count++;
 					}
 
 					i += count + 1;
 				} else if(next == DECREMENT || next == INCREMENT) {
 					//Checks for the clear instruction
-					if(m_program.tokens[i + 2].identifier == CLOSE_LOOP) {
-						newTokens.push_back(Token(CLEAR, 1));
+					if(m_program.tokens[i + 2].identifier == END_LOOP) {
+						newTokens.push_back(Token{CLEAR, 1});
 
 						i += 3;
 					}
-				} else if(previous == CLOSE_LOOP) {
+				} else if(previous == END_LOOP) {
 					//Gets rid of loops that occur right after another loop
 					char temp = next;
 					int count = 1;
 
-					while(temp != CLOSE_LOOP) {
+					while(temp != END_LOOP) {
 						count++;
-						temp = m_program.tokens[i + count];
+						temp = m_program.tokens[i + count].identifier;
 					}
 
 					i += count;
@@ -297,7 +296,7 @@ enum BrainfInstructions {
 						actual += m_program.tokens[i + j].identifier;
 					}
 
-					newTokens.push_back(Token(COPY, 1));
+					newTokens.push_back(Token{COPY, 1});
 
 					i += 9;
 				}
@@ -312,7 +311,7 @@ enum BrainfInstructions {
 		//Second Pass
 		while(i < m_program.length()) {
 			char current = m_program.tokens[i].identifier;
-			char next = i < m_.program.length() - 1 ? m_program.tokens[i + 1].identifier : 0;
+			char next = i < m_program.length() - 1 ? m_program.tokens[i + 1].identifier : 0;
 
 			//Optimize for opposing operators <> +- ><
 			if(current == SHIFT_LEFT || current == SHIFT_RIGHT ||

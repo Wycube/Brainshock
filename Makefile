@@ -1,32 +1,37 @@
-CXX ?= clang++
+#Makefile for the interpreter, bsi
 
-SRC_DIR := src
-OBJ_DIR := obj
-INC_DIR := src/include
+CXX := clang++
+
+SRC_DIR := src/interpreter
+OBJ_DIR := obj/interpreter
+INC_DIR := src/include/interpreter
 
 BUILD_TYPE ?= DEBUG
 FLAGS = -Wall -I$(INC_DIR)
 
 ifeq ($(BUILD_TYPE), DEBUG) 
-	FLAGS = -g $(FLAGS)
+	FLAGS += -g
 else 
 	ifeq ($(BUILD_TYPE), RELEASE)
-		FLAGS = -O2 $(FLAGS)
+		FLAGS += -O2
+	endif
 endif
 
-_DEPS = Interpreter.hpp Memory.hpp Program.hpp
-DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))
+_DEPS = Interpreter.hpp Brainf.hpp Memory.hpp Program.hpp
+DEPS = $(patsubst %,$(INC_DIR)/%,$(_DEPS))
 
-_OBJ = Memory.o Program.o
-OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
+_OBJ = main.o Brainf.o Memory.o Program.o
+OBJ = $(patsubst %,$(OBJ_DIR)/%,$(_OBJ))
 
-$(ODIR)/%.o: %.cpp $(DEPS)
+$(shell mkdir -p obj/interpreter)
+
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp $(DEPS)
 	$(CXX) -c $(FLAGS) -o $@ $<
 
 bsi: $(OBJ)
-	$(OBJ) $(FLAGS) -o $@ $^
+	$(CXX) $(FLAGS) -o $@ $^
 
-.PHONY clean
+.PHONY: clean
 
 clean:
-	rm -f $(ODIR)/*.o bsi
+	
