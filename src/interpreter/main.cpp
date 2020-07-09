@@ -87,7 +87,7 @@ int main(int argc, char *argv[]) {
 
 		return 0;
 	} else if(options.flags[1]) {
-		std::cout << "Brainshock, Brainf** Interpreter\n"
+		std::cout << "Brainshock, Brainf*** Interpreter\n"
 		<< "Copyright (c) 2019 Spencer Burton\n"
 		<< "Version: " << major << '.' << minor << '.' << patch
 		<< std::endl;
