@@ -34,4 +34,4 @@ bsi: $(OBJ)
 .PHONY: clean
 
 clean:
-	
+	rm -rfd obj bsi
