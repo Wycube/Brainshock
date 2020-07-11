@@ -20,7 +20,7 @@ namespace bs {
 		virtual bool run(float runSpeed = 0) = 0;
 		virtual bool step(std::size_t numInstructions = 1) = 0;
 	
-		inline bool loadProgram(char *program, bool process = true);
+		inline bool loadProgram(const char *program, bool process = true);
 
 	private:
 
@@ -28,19 +28,18 @@ namespace bs {
 
 	protected:
 
-		Program m_program;
-		Tape m_memory;
-		std::size_t m_instPtr;
-		std::size_t m_dataPtr;
-
-
-		virtual bool expr() = 0; //checks for valid expressions
+		virtual bool expr() = 0; //Checks for valid expressions
 		virtual void preProcess() = 0;
 
 		inline char getChar();
+
+		Program m_program;
+		std::size_t m_instPtr;
+		std::size_t m_dataPtr;
+		Tape m_memory;
 	};
 
-	inline bool Interpreter::loadProgram(char *program, bool process) {
+	inline bool Interpreter::loadProgram(const char *program, bool process) {
 		m_program = Program();
 		m_program.program = std::string(program);
 

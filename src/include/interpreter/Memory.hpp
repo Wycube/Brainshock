@@ -2,8 +2,12 @@
 #define MEMORY_HPP
 
 #include <cstddef>
+#include <cstring>
+#include <iostream>
 
 namespace bs {
+
+	static int num = 0;
 	
 	enum DUMP_BASE {
 		BASE_HEX = 16,
@@ -13,11 +17,10 @@ namespace bs {
 
 	/** Memory used in Brainf, it is a array of bytes */
 	struct Tape {
-		std::size_t m_size;
-		unsigned char *m_cells;
-
 		Tape(std::size_t size = 0);
-		~Tape() {delete[] m_cells;}
+		~Tape() { delete[] m_cells; }
+
+		Tape& operator=(Tape const &other) { m_size = other.m_size; m_cells = new unsigned char[m_size]; memcpy(m_cells, other.m_cells, m_size); return *this; }
 
 		void fPrint(int cell);
 		void fDump(DUMP_BASE base = BASE_HEX, bool ascii = false);
@@ -27,7 +30,18 @@ namespace bs {
 
 			return m_cells[index];
 		}
+
+		std::size_t m_size;
+		unsigned char *m_cells;
 	};
 }
 
 #endif //MEMORY_HPP
+
+
+
+
+
+
+
+

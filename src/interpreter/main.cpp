@@ -18,11 +18,12 @@ const int patch = 0;
 static std::unordered_map<std::string, int> strToNum = {
 	{"-help", 0}, {"h", 0},    //Print out the usage message
 	{"-version", 1}, {"v", 1}, //Print out version info
-	{"b", 2}                   //Print out runtime after execution
+	{"b", 2},                  //Print out runtime after execution
+	{"p", 3}                   //Processes the program before it's ran
 };
 
 static struct {
-	bool flags[3] = {false};
+	bool flags[4] = {false};
 	std::string path = "";
 	bool repl = true;
 } options;
@@ -69,6 +70,30 @@ void parseArgs(int argc, char *argv[]) {
 	}
 }
 
+/*
+ * A basic REPL with the exit being the word exit only, as input.
+ * This does not pre-process the input string, but just runs it 
+ * directly in the interpreter.
+ */
+void evalLoop(bs::BrainfInterpreter &interpreter) {
+	std::string input;
+
+	while(true) {
+		std::cout << ":"; //This symbol is arbitrary I just needed something thats not a brainf*** instruction
+
+		std::getline(std::cin, input);
+
+		if(input == "exit")
+			return;
+
+		interpreter.loadProgram(input.c_str(), false);
+		if(!interpreter.run())
+		       std::cout << "An error occurred" << std::endl;
+
+		std::cout << std::endl;	
+	}
+}
+
 
 int main(int argc, char *argv[]) {
 	//Set flags and stuff
@@ -82,7 +107,8 @@ int main(int argc, char *argv[]) {
 		<< " -h --help    Display this help message\n"
 		<< " -v --version Display version info\n"
 		<< std::endl
-		<< " -b           Display the program's runtime after execution"
+		<< " -b           Display the program's runtime after execution\n"
+		<< " -p           Processes/Optimizes the program to an IR before it's ran"
 		<< std::endl;
 
 		return 0;
@@ -92,6 +118,15 @@ int main(int argc, char *argv[]) {
 		<< "Version: " << major << '.' << minor << '.' << patch
 		<< std::endl;
 
+		return 0;
+	}
+
+	//Create Interpreter for next steps
+	bs::BrainfInterpreter interpreter = bs::BrainfInterpreter();
+
+	//Go into interactive mode
+	if(options.repl) {
+		evalLoop(interpreter);
 		return 0;
 	}
 }
