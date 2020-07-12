@@ -101,7 +101,7 @@ void evalLoop(bs::BrainfInterpreter &interpreter) {
 		delta = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
 
 		//interpreter.m_memory.fDump(bs::BASE_HEX, true);
-		interpreter.m_memory.fPrint(interpreter.m_dataPtr);
+		interpreter.getMemory().fPrint(interpreter.getDataPtr());
 
 		//-b Print Timing
 		if(options.flags[2])
@@ -140,8 +140,6 @@ int main(int argc, char *argv[]) {
 
 	//Create Interpreter for next steps
 	bs::BrainfInterpreter interpreter = bs::BrainfInterpreter();
-
-	interpreter.m_memory.fDump(bs::BASE_HEX, true);
 
 	//Go into interactive mode
 	if(options.repl) {

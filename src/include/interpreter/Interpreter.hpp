@@ -12,7 +12,7 @@ namespace bs {
 	/**
 	 * This is an abstract interpreter class, an interpreter for a 
 	 * Brainf*** like language can be made by overriding this class.
-	 * loadProgram() is final because that shouldn't differ between interpreters.
+	 * loadProgram() is defined because that shouldn't differ between interpreters.
 	 */
 	class Interpreter {
 	public:
@@ -21,6 +21,13 @@ namespace bs {
 		virtual bool step(std::size_t numInstructions = 1) = 0;
 	
 		inline bool loadProgram(const char *program, bool process = true, bool resetDataPtr = true);
+
+		//Getters
+		inline Program& getProgram() { return m_program; }
+		inline Tape& getMemory() { return m_memory; }
+		inline std::size_t getInstPtr() { return m_instPtr; }
+		inline std::size_t getDataPtr() { return m_dataPtr; }
+
 
 	private:
 
@@ -32,11 +39,11 @@ namespace bs {
 		virtual void preProcess() = 0;
 
 		inline char getChar();
-	public:
+
 		Program m_program;
+		Tape m_memory;
 		std::size_t m_instPtr = 0;
 		std::size_t m_dataPtr = 0;
-		Tape m_memory;
 	};
 
 	inline bool Interpreter::loadProgram(const char *program, bool process, bool resetDataPtr) {
