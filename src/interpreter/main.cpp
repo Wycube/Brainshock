@@ -77,20 +77,37 @@ void parseArgs(int argc, char *argv[]) {
  */
 void evalLoop(bs::BrainfInterpreter &interpreter) {
 	std::string input;
+	std::chrono::milliseconds delta;
 
 	while(true) {
-		std::cout << ":"; //This symbol is arbitrary I just needed something thats not a brainf*** instruction
+		std::cout << ": "; //This symbol is arbitrary I just needed something thats not a brainf*** instruction
 
 		std::getline(std::cin, input);
 
 		if(input == "exit")
 			return;
 
-		interpreter.loadProgram(input.c_str(), false);
+		//-p Process the program if set
+		interpreter.loadProgram(input.c_str(), options.flags[3], false);
+
+		//Timing Start
+		auto start = std::chrono::steady_clock::now();
+
 		if(!interpreter.run())
 		       std::cout << "An error occurred" << std::endl;
 
-		std::cout << std::endl;	
+		//Timing End
+		auto end = std::chrono::steady_clock::now();
+		delta = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+
+		//interpreter.m_memory.fDump(bs::BASE_HEX, true);
+		interpreter.m_memory.fPrint(interpreter.m_dataPtr);
+
+		//-b Print Timing
+		if(options.flags[2])
+			std::cout << "Finished in " << delta.count() << "ms" << std::endl;
+		else
+			std::cout << std::endl;	
 	}
 }
 
@@ -123,6 +140,8 @@ int main(int argc, char *argv[]) {
 
 	//Create Interpreter for next steps
 	bs::BrainfInterpreter interpreter = bs::BrainfInterpreter();
+
+	interpreter.m_memory.fDump(bs::BASE_HEX, true);
 
 	//Go into interactive mode
 	if(options.repl) {

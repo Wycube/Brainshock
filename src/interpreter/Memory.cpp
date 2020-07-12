@@ -64,8 +64,6 @@ namespace bs {
 		endEllipsis = cell < m_size - 4;
 		offSet = endEllipsis ? offSet : 7 - (m_size - cell); //Makes sure the loop doesn't go past the size
 
-		std::cout << "s:" << std::to_string(m_size) << " eE:" << std::to_string(endEllipsis) << std::endl;
-
 		for(int i = 0; i < 7; i++) {
 			std::string formatted = formatChar(m_cells[cell - offSet + i]);
 			finalString += formatted + "|";

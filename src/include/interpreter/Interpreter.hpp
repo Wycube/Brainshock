@@ -20,7 +20,7 @@ namespace bs {
 		virtual bool run(float runSpeed = 0) = 0;
 		virtual bool step(std::size_t numInstructions = 1) = 0;
 	
-		inline bool loadProgram(const char *program, bool process = true);
+		inline bool loadProgram(const char *program, bool process = true, bool resetDataPtr = true);
 
 	private:
 
@@ -32,16 +32,21 @@ namespace bs {
 		virtual void preProcess() = 0;
 
 		inline char getChar();
-
+	public:
 		Program m_program;
-		std::size_t m_instPtr;
-		std::size_t m_dataPtr;
+		std::size_t m_instPtr = 0;
+		std::size_t m_dataPtr = 0;
 		Tape m_memory;
 	};
 
-	inline bool Interpreter::loadProgram(const char *program, bool process) {
+	inline bool Interpreter::loadProgram(const char *program, bool process, bool resetDataPtr) {
 		m_program = Program();
 		m_program.program = std::string(program);
+
+		m_instPtr = 0;
+
+		if(resetDataPtr)
+			m_dataPtr = 0;
 
 		if(process) {
 			m_program.tokenize();

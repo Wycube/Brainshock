@@ -160,7 +160,7 @@ enum BrainfInstructions {
 
 		if(!regulate) {
 			for(std::size_t i = m_instPtr; i < m_program.length(); i++) {
-			step();
+				step();
 			}
 		} else {
 			for(std::size_t i = m_instPtr; i < m_program.length(); i++) {
