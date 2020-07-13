@@ -57,10 +57,17 @@ namespace bs {
 
 		if(process) {
 			m_program.tokenize();
-			
+		
+			std::cout << "1" << std::endl;
+
+
 			if(!expr()) return false; //Invalid syntax
 
+			std::cout << "2" << std::endl;
+
 			preProcess();
+
+			std::cout << "3" << std::endl;
 		}
 
 		return true;
@@ -79,7 +86,7 @@ namespace bs {
 			}
 		}
 
-		temp = m_inBuffer.front();
+		temp = m_inBuffer.back();
 		m_inBuffer.pop_back();
 
 		return temp;

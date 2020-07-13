@@ -43,9 +43,9 @@ enum BrainfInstructions {
 				break;
 				case DECREMENT : m_memory[m_dataPtr] -= inst.data;
 				break;
-				case START_LOOP : if(!m_memory[m_dataPtr]) m_instPtr += inst.data;//equal to zero
+				case START_LOOP : if(!m_memory[m_dataPtr]) m_instPtr += inst.data; //equal to zero
 				break;
-				case END_LOOP : if(m_memory[m_dataPtr]) m_instPtr -= inst.data;//Anything but zero
+				case END_LOOP : if(m_memory[m_dataPtr]) m_instPtr -= inst.data; //Anything but zero
 				break;
 				case INPUT : m_memory[m_dataPtr] = getChar();
 				break;
@@ -54,8 +54,8 @@ enum BrainfInstructions {
 				case CLEAR : m_memory[m_dataPtr] = 0;
 				break;
 				case COPY : m_memory[m_dataPtr + 1] = m_memory[m_dataPtr];
-					          m_memory[m_dataPtr + 2] = m_memory[m_dataPtr];
-										m_memory[m_dataPtr] = 0;
+					    m_memory[m_dataPtr + 2] = m_memory[m_dataPtr];
+					    m_memory[m_dataPtr]     = 0;
 				break;
 			}
 		}
@@ -65,7 +65,7 @@ enum BrainfInstructions {
 
 	size_t handleStartLoop(unsigned char value, Program &program, std::size_t instPtr) {
 		if(!value) {
-			//Search forn ending bracket
+			//Search for ending bracket
 			std::size_t i = instPtr;
 			char inst = program.program[i];
 
@@ -138,8 +138,6 @@ enum BrainfInstructions {
 
 	/**
 	* This is the run function, which run speed can be adjusted and is
-	* controlled by some chrono utilities. It basically just steps and
-	* checks the delta time, waits or steps again. It is not guaranteed
 	* to go as fast as set but it will try. Also zero means as fast as possible.
 	*
 	* @param runSpeed The speed to run at in instructions per second
@@ -260,7 +258,7 @@ enum BrainfInstructions {
 			} else if(current == START_LOOP) {
 				
 				//Check for very beginning of program
-				//These are usually comments
+				//These are usually for comments
 				if(!i) {
 					int count = 1;
 
@@ -300,7 +298,11 @@ enum BrainfInstructions {
 
 					i += 9;
 				}
+			} else if(current == INPUT || current == OUTPUT) {
+				newTokens.push_back(Token{current, 1});
 			}
+
+			i++;
 		}
 
 		//Replace the token lists in m_program
