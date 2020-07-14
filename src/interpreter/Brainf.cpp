@@ -24,41 +24,40 @@ enum BrainfInstructions {
 		m_memory = Tape(memSize);
 	}
 
-	bool BrainfInterpreter::stepProcessed(std::size_t numInstructions) {
+	bool BrainfInterpreter::stepProcessed() {
 		if(m_program.tokens.empty())
-				return false;
+			return false;
+		if(m_instPtr > m_program.length())
+			return false;
 
-		for(std::size_t i = 0; i < numInstructions; i++) {
-			if(m_instPtr > m_program.length())
-				return false;
+		Token inst = m_program.tokens[m_instPtr];
 
-			Token inst = m_program.tokens[m_instPtr++];
-
-			switch(inst.identifier) {
-				case SHIFT_RIGHT : m_dataPtr += inst.data;
-				break;
-				case SHIFT_LEFT : m_dataPtr -= inst.data;
-				break;
-				case INCREMENT : m_memory[m_dataPtr] += inst.data;
-				break;
-				case DECREMENT : m_memory[m_dataPtr] -= inst.data;
-				break;
-				case START_LOOP : if(!m_memory[m_dataPtr]) m_instPtr += inst.data; //equal to zero
-				break;
-				case END_LOOP : if(m_memory[m_dataPtr]) m_instPtr -= inst.data; //Anything but zero
-				break;
-				case INPUT : m_memory[m_dataPtr] = getChar();
-				break;
-				case OUTPUT : std::cout << m_memory[m_dataPtr];
-				break;
-				case CLEAR : m_memory[m_dataPtr] = 0;
-				break;
-				case COPY : m_memory[m_dataPtr + 1] = m_memory[m_dataPtr];
-					    m_memory[m_dataPtr + 2] = m_memory[m_dataPtr];
-					    m_memory[m_dataPtr]     = 0;
-				break;
-			}
+		switch(inst.identifier) {
+			case SHIFT_RIGHT : m_dataPtr += inst.data;
+			break;
+			case SHIFT_LEFT : m_dataPtr -= inst.data;
+			break;
+			case INCREMENT : m_memory[m_dataPtr] += inst.data;
+			break;
+			case DECREMENT : m_memory[m_dataPtr] -= inst.data;
+			break;
+			case START_LOOP : if(m_memory[m_dataPtr] == 0) m_instPtr += inst.data;
+			break;
+			case END_LOOP : if(m_memory[m_dataPtr] != 0) m_instPtr -= inst.data;
+			break;
+			case INPUT : m_memory[m_dataPtr] = getChar();
+			break;
+			case OUTPUT : std::cout << m_memory[m_dataPtr];
+			break;
+			case CLEAR : m_memory[m_dataPtr] = 0;
+			break;
+			case COPY : m_memory[m_dataPtr + 1] = m_memory[m_dataPtr];
+				    m_memory[m_dataPtr + 2] = m_memory[m_dataPtr];
+				    m_memory[m_dataPtr]     = 0;
+			break;
 		}
+
+		m_instPtr++;
 
 		return true;
 	}
@@ -70,70 +69,68 @@ enum BrainfInstructions {
 			char inst = program.program[i];
 
 			while(inst != ']') {
-				inst = program.program[++i];
+				inst = program.program[++i]; //Add some checking here so it doesnt seg fault on "["
 			}
 
-			return i;
+			return i + 1;
 		} else {
 			//Indicates that this bracket should be pushed onto the jump table
 			return 0; 
 		}
 	}
 
-	bool BrainfInterpreter::stepUnprocessed(std::size_t numInstructions) {
-		for(std::size_t i = 0; i < numInstructions; i++) {
-			if(m_instPtr > m_program.length())
-				return false;
+	bool BrainfInterpreter::stepUnprocessed() {
+		if(m_instPtr > m_program.length())
+			return false;
 
-			char inst = m_program.program[m_instPtr++];
-			std::size_t jumpValue;
+		char inst = m_program.program[m_instPtr];
+		std::size_t jumpValue;
 
-			switch(inst) {
-				case SHIFT_RIGHT : m_dataPtr++;
-				break;
-				case SHIFT_LEFT : m_dataPtr--;
-				break;
-				case INCREMENT : m_memory[m_dataPtr]++;
-				break;
-				case DECREMENT : m_memory[m_dataPtr]--;
-				break;
-				case START_LOOP :
-					jumpValue = handleStartLoop(m_memory[m_dataPtr], m_program, m_instPtr);
-
-					if(!jumpValue)
-						m_jumpTable.push_back(m_instPtr);
-					else
-						m_instPtr = jumpValue;
-				break;
-				case END_LOOP : 
-					if(m_memory[m_dataPtr])
-						m_instPtr = m_jumpTable.back();
-					else
-						m_jumpTable.pop_back();
-				break;
-				case INPUT : m_memory[m_dataPtr] = getChar();
-				break;
-				case OUTPUT : std::cout << m_memory[m_dataPtr];
-				break;
-			}
+		switch(inst) {
+			case SHIFT_RIGHT : m_dataPtr++;
+			break;
+			case SHIFT_LEFT : m_dataPtr--;
+			break;
+			case INCREMENT : m_memory[m_dataPtr]++;
+			break;
+			case DECREMENT : m_memory[m_dataPtr]--;
+			break;
+			case START_LOOP :
+				jumpValue = handleStartLoop(m_memory[m_dataPtr], m_program, m_instPtr);
+				if(jumpValue == 0)
+					m_jumpTable.push_back(m_instPtr + 1);
+				else
+					m_instPtr = jumpValue;
+			break;
+			case END_LOOP : 
+				if(m_memory[m_dataPtr] != 0) {
+					m_instPtr = m_jumpTable.back();
+					return true; //Return here so we don't increment the instruction pointer
+				} else {
+					m_jumpTable.pop_back();
+				}
+			break;
+			case INPUT : m_memory[m_dataPtr] = getChar();
+			break;
+			case OUTPUT : std::cout << m_memory[m_dataPtr];
+			break;
 		}
+
+		m_instPtr++;
 
 		return true;
 	}
 
 	/**
-	* This steps the execution a certain number of steps, or to the
-	* end whichever is first. 
+	* This steps the execution a single step.  
 	*
-	* @param numInstructions The number of instructions to move forward by. 
-	*
-	* @return True if all the instructions were executed successfully.
+	* @return True if the instruction was executed successfully.
 	*/
-	bool BrainfInterpreter::step(std::size_t numInstructions) {
+	bool BrainfInterpreter::step() {
 		if(m_program.processed)
-			return stepProcessed(numInstructions);
+			return stepProcessed();
 		else
-			return stepUnprocessed(numInstructions);
+			return stepUnprocessed();
 	}
 
 	/**
@@ -148,7 +145,7 @@ enum BrainfInstructions {
 		if(runSpeed < 0)
 			runSpeed = 0; //Just do zero for anything negative
 
-		bool regulate = !(runSpeed == 0);
+		bool regulate = runSpeed != 0;
 
 		int milliPerInst = regulate ? 1 / runSpeed : 0;
 		std::chrono::milliseconds delta;
@@ -157,11 +154,10 @@ enum BrainfInstructions {
 		auto lastTime = currentTime;
 
 		if(!regulate) {
-			for(std::size_t i = m_instPtr; i < m_program.length(); i++) {
+			while(m_instPtr < m_program.length())
 				step();
-			}
 		} else {
-			for(std::size_t i = m_instPtr; i < m_program.length(); i++) {
+			while(m_instPtr < m_program.length()) {
 					currentTime = std::chrono::steady_clock::now();
 					delta = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - lastTime);
 					lastTime = currentTime;

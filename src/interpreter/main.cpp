@@ -19,11 +19,12 @@ static std::unordered_map<std::string, int> strToNum = {
 	{"-help", 0}, {"h", 0},    //Print out the usage message
 	{"-version", 1}, {"v", 1}, //Print out version info
 	{"b", 2},                  //Print out runtime after execution
-	{"p", 3}                   //Processes the program before it's ran
+	{"p", 3},                  //Processes the program before it's ran
+	{"d", 4}                   //Prints all component output after stuff idk it's only temporary
 };
 
 static struct {
-	bool flags[4] = {false};
+	bool flags[5] = {false};
 	std::string path = "";
 	bool repl = true;
 } options;
@@ -100,8 +101,18 @@ void evalLoop(bs::BrainfInterpreter &interpreter) {
 		auto end = std::chrono::steady_clock::now();
 		delta = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
 
-		//interpreter.m_memory.fDump(bs::BASE_HEX, true);
-		interpreter.getMemory().fPrint(interpreter.getDataPtr());
+		//-d Debug output
+		if(options.flags[4]) {
+			std::cout << "JumpTable: ";
+
+			for(int i = 0; i < interpreter.m_jumpTable.size(); i++)
+				std::cout << interpreter.m_jumpTable.at(i);
+
+			std::cout << std::endl;	
+		}
+
+		interpreter.getMemory().fDump(bs::BASE_HEX, true);
+		//interpreter.getMemory().fPrint(interpreter.getDataPtr());
 
 		//-b Print Timing
 		if(options.flags[2])

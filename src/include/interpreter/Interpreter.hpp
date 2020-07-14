@@ -18,7 +18,7 @@ namespace bs {
 	public:
 		//The actual interpreting in these
 		virtual bool run(float runSpeed = 0) = 0;
-		virtual bool step(std::size_t numInstructions = 1) = 0;
+		virtual bool step() = 0;
 	
 		inline bool loadProgram(const char *program, bool process = true, bool resetDataPtr = true);
 
@@ -57,17 +57,10 @@ namespace bs {
 
 		if(process) {
 			m_program.tokenize();
-		
-			std::cout << "1" << std::endl;
 
-
-			if(!expr()) return false; //Invalid syntax
-
-			std::cout << "2" << std::endl;
+			if(!expr()) return false; //Program has invalid syntax
 
 			preProcess();
-
-			std::cout << "3" << std::endl;
 		}
 
 		return true;

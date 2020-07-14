@@ -11,15 +11,15 @@ namespace bs {
 		BrainfInterpreter(std::size_t memSize = 30000);
 
 		bool run(float runSpeed = 0) override;
-		bool step(std::size_t numInstructions = 1) override;
+		bool step() override;
 
 	private:
 
-		bool stepProcessed(size_t numInstructions);
-		bool stepUnprocessed(size_t numInstructions);
-
+		bool stepProcessed();
+		bool stepUnprocessed();
+	public:
 		std::deque<std::size_t> m_jumpTable;
-
+	private:
 		bool expr() override;
 		void preProcess() override;
 	};
