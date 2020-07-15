@@ -72,9 +72,11 @@ namespace bs {
 		if(m_inBuffer.empty()) {
 			std::string input;
 			
-			std::getline(std::cin, input);
+			//If there was nothing entered prompt again
+			while(input == "")
+				std::getline(std::cin, input);
 
-			for(int i = 0; i < input.length(); i++) {
+			for(std::size_t i = 0; i < input.length(); i++) {
 				m_inBuffer.push_front(input[i]);
 			}
 		}
