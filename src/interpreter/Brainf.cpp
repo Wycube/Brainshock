@@ -62,17 +62,20 @@ enum BrainfInstructions {
 		return true;
 	}
 
-	size_t handleStartLoop(unsigned char value, Program &program, std::size_t instPtr) {
+	size_t handleStartLoop(unsigned char value, Program &program, std::size_t instPtr, bool &success) {
+		success = true;
+		
 		if(!value) {
 			//Search for ending bracket
-			std::size_t i = instPtr;
-			char inst = program.program[i];
-
-			while(inst != ']') {
-				inst = program.program[++i]; //Add some checking here so it doesnt seg fault on "["
+			for(std::size_t i = instPtr; i < program.length(); i++) {
+				if(program.program[i] == ']')
+					return i + 1;
 			}
 
-			return i + 1;
+			//Couldn't find ending bracket
+			success = false;
+
+			return 1;
 		} else {
 			//Indicates that this bracket should be pushed onto the jump table
 			return 0; 
@@ -85,6 +88,7 @@ enum BrainfInstructions {
 
 		char inst = m_program.program[m_instPtr];
 		std::size_t jumpValue;
+		bool success;
 
 		switch(inst) {
 			case SHIFT_RIGHT : m_dataPtr++;
@@ -96,13 +100,19 @@ enum BrainfInstructions {
 			case DECREMENT : m_memory[m_dataPtr]--;
 			break;
 			case START_LOOP :
-				jumpValue = handleStartLoop(m_memory[m_dataPtr], m_program, m_instPtr);
+				jumpValue = handleStartLoop(m_memory[m_dataPtr], m_program, m_instPtr, success);
+
 				if(jumpValue == 0)
 					m_jumpTable.push_back(m_instPtr + 1);
-				else
+				else if(success)
 					m_instPtr = jumpValue;
+				else
+					return false;
 			break;
 			case END_LOOP : 
+				if(m_jumpTable.empty())
+					return false;
+
 				if(m_memory[m_dataPtr] != 0) {
 					m_instPtr = m_jumpTable.back();
 					return true; //Return here so we don't increment the instruction pointer
@@ -137,13 +147,13 @@ enum BrainfInstructions {
 	* This is the run function, which run speed can be adjusted and is
 	* to go as fast as set but it will try. Also zero means as fast as possible.
 	*
-	* @param runSpeed The speed to run at in instructions per second
+	* @param runSpeed The speed to run at in Instructions per second
 	*
 	* @return True if the program executed successfully.
 	*/
 	bool BrainfInterpreter::run(float runSpeed) {
 		if(runSpeed < 0)
-			runSpeed = 0; //Just do zero for anything negative
+			runSpeed = 0; //Just set zero for anything negative
 
 		bool regulate = runSpeed != 0;
 
@@ -155,7 +165,7 @@ enum BrainfInstructions {
 
 		if(!regulate) {
 			while(m_instPtr < m_program.length())
-				step();
+				if(!step()) return false;
 		} else {
 			while(m_instPtr < m_program.length()) {
 					currentTime = std::chrono::steady_clock::now();
