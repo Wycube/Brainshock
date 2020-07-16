@@ -15,11 +15,10 @@ namespace bs {
 
 	private:
 
+		std::deque<std::size_t> m_jumpTable;
+
 		bool stepProcessed();
 		bool stepUnprocessed();
-	public:
-		std::deque<std::size_t> m_jumpTable;
-	private:
 		bool expr() override;
 		void preProcess() override;
 	};
