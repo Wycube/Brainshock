@@ -28,6 +28,7 @@ namespace bs {
 		inline std::size_t getInstPtr() { return m_instPtr; }
 		inline std::size_t getDataPtr() { return m_dataPtr; }
 
+		inline std::string getError() { return m_error; }
 
 	private:
 
@@ -44,6 +45,7 @@ namespace bs {
 		Tape m_memory;
 		std::size_t m_instPtr = 0;
 		std::size_t m_dataPtr = 0;
+		std::string m_error;
 	};
 
 	inline bool Interpreter::loadProgram(const char *program, bool process, bool resetDataPtr) {
@@ -88,5 +90,7 @@ namespace bs {
 	}
 
 };
+
+
 
 #endif

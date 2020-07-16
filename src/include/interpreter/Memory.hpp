@@ -28,7 +28,7 @@ namespace bs {
 		inline unsigned char& operator[] (std::size_t index) {
 			if(index < 0 || index > m_size) {
 				outOfBounds = true;
-				return 0;
+				return m_dummy;
 			}
 
 			outOfBounds = false;
@@ -37,6 +37,7 @@ namespace bs {
 
 		bool outOfBounds = false;
 		std::size_t m_size;
+		unsigned char m_dummy;
 		unsigned char *m_cells;
 	};
 }

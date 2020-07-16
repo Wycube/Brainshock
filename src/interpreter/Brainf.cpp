@@ -24,11 +24,29 @@ enum BrainfInstructions {
 		m_memory = Tape(memSize);
 	}
 
+	std::string checkMemoryError(Tape &memory, char instruction, std::size_t instPtr) {
+		std::string error;
+		
+		if(memory.outOfBounds) {
+			error = "Out-of-Bounds access on instruction '";
+			error += instruction;
+			error += "' at character ";
+			error += std::to_string(instPtr + 1);
+			memory[0]; //This is just to reset the error value internally
+		}
+
+		return error;
+	}
+
+
 	bool BrainfInterpreter::stepProcessed() {
-		if(m_program.tokens.empty())
+		if(m_program.tokens.empty()) {
+			m_error = "No program provided";
 			return false;
-		if(m_instPtr > m_program.length())
+		} else if(m_instPtr > m_program.length()) {
+			m_error = "Execution gone past end of program";
 			return false;
+		}
 
 		Token inst = m_program.tokens[m_instPtr];
 
@@ -57,6 +75,14 @@ enum BrainfInstructions {
 			break;
 		}
 
+		//Check for out-of-bounds memory access
+		std::string error = checkMemoryError(m_memory, inst.identifier, m_instPtr);
+		if(error != "") {
+			m_error = error;
+			return false;
+		}
+
+
 		m_instPtr++;
 
 		return true;
@@ -83,8 +109,10 @@ enum BrainfInstructions {
 	}
 
 	bool BrainfInterpreter::stepUnprocessed() {
-		if(m_instPtr > m_program.length())
+		if(m_instPtr > m_program.length()) {
+			m_error = "Execution gone past the end of the program instructions";
 			return false;
+		}
 
 		char inst = m_program.program[m_instPtr];
 		std::size_t jumpValue;
@@ -102,16 +130,26 @@ enum BrainfInstructions {
 			case START_LOOP :
 				jumpValue = handleStartLoop(m_memory[m_dataPtr], m_program, m_instPtr, success);
 
-				if(jumpValue == 0)
+				if(jumpValue == 0) {
 					m_jumpTable.push_back(m_instPtr + 1);
-				else if(success)
+				} else if(success) {
 					m_instPtr = jumpValue;
-				else
+				} else {
+					m_error = "No matching bracket ] for instruction '";
+				       	m_error	+= inst;
+				       	m_error	+= "' at character ";
+					m_error += std::to_string(m_instPtr + 1);
 					return false;
+				}
 			break;
 			case END_LOOP : 
-				if(m_jumpTable.empty())
+				if(m_jumpTable.empty()) {
+					m_error = "No matching bracket [ for instruction '";
+					m_error += inst;
+					m_error += "' at character ";
+					m_error += std::to_string(m_instPtr + 1);
 					return false;
+				}
 
 				if(m_memory[m_dataPtr] != 0) {
 					m_instPtr = m_jumpTable.back();
@@ -124,6 +162,13 @@ enum BrainfInstructions {
 			break;
 			case OUTPUT : std::cout << m_memory[m_dataPtr];
 			break;
+		}
+
+		//Check for out-of-bounds access
+		std::string error = checkMemoryError(m_memory, inst, m_instPtr);
+		if(error != "") {
+			m_error = error;
+			return false;
 		}
 
 		m_instPtr++;
@@ -198,6 +243,7 @@ enum BrainfInstructions {
 				openLoops.push_back(i);
 			} else if(m_program[i] == ']') {
 				if(openLoops.empty()) {
+					m_error = "Too many ']' for open loops '['";
 					return false;
 				}
 
@@ -210,6 +256,9 @@ enum BrainfInstructions {
 				openLoops.pop_back();
 			}
 		}
+
+		if(!openLoops.empty())
+			m_error = "Too many '[' for close loops ']'";
 
 		return openLoops.empty();
 	}

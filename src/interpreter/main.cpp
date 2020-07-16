@@ -89,17 +89,19 @@ void evalLoop(bs::BrainfInterpreter &interpreter) {
 			return;
 
 		//-p Process the program if set
-		interpreter.loadProgram(input.c_str(), options.flags[3], false);
+		if(!interpreter.loadProgram(input.c_str(), options.flags[3], false)) {
+			std::cout << "Error: " << interpreter.getError() << std::endl;
+		} else {
+			//Timing Start
+			auto start = std::chrono::steady_clock::now();
 
-		//Timing Start
-		auto start = std::chrono::steady_clock::now();
+			if(!interpreter.run())
+				std::cout << "Error: " << interpreter.getError() << std::endl;
 
-		if(!interpreter.run())
-		       std::cout << "An error occurred" << std::endl;
-
-		//Timing End
-		auto end = std::chrono::steady_clock::now();
-		delta = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+			//Timing End
+			auto end = std::chrono::steady_clock::now();
+			delta = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+		}
 
 		//-d Debug output
 		if(options.flags[4]) {
