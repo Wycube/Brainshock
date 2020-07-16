@@ -25,12 +25,17 @@ namespace bs {
 		void fPrint(int cell);
 		void fDump(DUMP_BASE base = BASE_HEX, bool ascii = false);
 
-		inline unsigned char& operator[] (int index) {
-			//Out-of-Bounds is undefined behavior
+		inline unsigned char& operator[] (std::size_t index) {
+			if(index < 0 || index > m_size) {
+				outOfBounds = true;
+				return 0;
+			}
 
+			outOfBounds = false;
 			return m_cells[index];
 		}
 
+		bool outOfBounds = false;
 		std::size_t m_size;
 		unsigned char *m_cells;
 	};
