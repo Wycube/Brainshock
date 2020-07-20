@@ -148,7 +148,7 @@ namespace bs {
 			
 			//Beginning deliminattor
 			if(ascii)
-				asChar = "(";
+				asChar = " (";
 
 			for(std::size_t j = 0; j < valuesPerLine; j++) {
 				//Print the number for a certain base

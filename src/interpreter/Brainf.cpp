@@ -49,6 +49,8 @@ enum BrainfInstructions {
 		}
 
 		Token inst = m_program.tokens[m_instPtr];
+		bool printed = false;
+		bool aprinted = false;
 
 		switch(inst.identifier) {
 			case SHIFT_RIGHT : m_dataPtr += inst.data;
@@ -60,8 +62,10 @@ enum BrainfInstructions {
 			case DECREMENT : m_memory[m_dataPtr] -= inst.data;
 			break;
 			case START_LOOP : if(m_memory[m_dataPtr] == 0) m_instPtr += inst.data;
+						  if(!printed) {std::cout << "open:" << inst.data << std::endl; printed = true; }
 			break;
 			case END_LOOP : if(m_memory[m_dataPtr] != 0) m_instPtr -= inst.data;
+						if(!aprinted) {std::cout << "close:" << inst.data << std::endl; aprinted = true; }
 			break;
 			case INPUT : m_memory[m_dataPtr] = getChar();
 			break;
@@ -279,7 +283,7 @@ enum BrainfInstructions {
 	}
 
 	/**
-	* This method will do the optimization like folding repetive 
+	* This method will do the optimization like folding repetitive
 	* instructions into one and other creative things I can find
 	* or think of, without modifying the behavior.
 	*/
@@ -295,7 +299,7 @@ enum BrainfInstructions {
 			char next = i < m_program.length() - 1 ? m_program.tokens[i + 1].identifier : 0;
 
 			if(current == SHIFT_LEFT || current == SHIFT_RIGHT ||
-				 current == INCREMENT  || current == DECREMENT) {
+			   current == INCREMENT  || current == DECREMENT) {
 				//Counts instructions and uses that as data for a single
 				//instruction, like run length encoding
 
@@ -314,10 +318,10 @@ enum BrainfInstructions {
 				
 				//Check for very beginning of program
 				//These are usually for comments
-				if(!i) {
+				if(i == 0) {
 					int count = 1;
 
-					while(m_program.tokens[i].identifier != END_LOOP) {
+					while(m_program.tokens[i + count].identifier != END_LOOP) {
 						count++;
 					}
 
