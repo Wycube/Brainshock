@@ -91,11 +91,6 @@ void evalLoop(bs::BrainfInterpreter &interpreter) {
 		if(!interpreter.loadProgram(input.c_str(), options.flags[3], false)) {
 			std::cerr << "Error: " << interpreter.getError() << std::endl;
 		} else {
-			
-			for(size_t i = 0; i < interpreter.getProgram().length(); i++)
-				                        std::cout << interpreter.getProgram()[i] << interpreter.getProgram().tokens[i].data;
-			                std::cout << std::endl;
-
 			//Timing Start
 			auto start = std::chrono::steady_clock::now();
 
@@ -108,7 +103,7 @@ void evalLoop(bs::BrainfInterpreter &interpreter) {
 		}
 
 		for(size_t i = 0; i < interpreter.getProgram().length(); i++)
-			std::cout << interpreter.getProgram()[i] << interpreter.getProgram().tokens[i].data;
+			if(!interpreter.getProgram().tokens.empty())std::cout << interpreter.getProgram()[i] << interpreter.getProgram().tokens[i].data;
 		std::cout << std::endl;
 		
 		interpreter.getMemory().fDump(bs::BASE_HEX, true);

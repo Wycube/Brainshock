@@ -14,6 +14,8 @@ namespace bs {
 		for(size_t i = 0; i < program.length(); i++) {
 			tokens.push_back(Token{program[i], 1});
 		}
+
+		processed = true;
 	}
 
 	/**

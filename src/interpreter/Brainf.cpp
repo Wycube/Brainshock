@@ -392,22 +392,20 @@ enum BrainfInstructions {
 
 		i = 0;
 
-		/*
-
 		//Second Pass
 		while(i < m_program.length()) {
 			char current = m_program.tokens[i].identifier;
 			char next = i < m_program.length() - 1 ? m_program.tokens[i + 1].identifier : 0;
 
-			//Optimize for opposing operators <> +- ><
+			//Optimize for opposing operators +- ><
 			if(current == SHIFT_LEFT || current == SHIFT_RIGHT ||
-				 current == INCREMENT  || current == DECREMENT) {
+			   current == INCREMENT  || current == DECREMENT) {
 				
 				if(isOpposing(current, next)) {
 					if(m_program.tokens[i].data == m_program.tokens[i + 1].data) {
 						//Remove both
 						m_program.tokens.erase(m_program.tokens.begin() + i);
-						m_program.tokens.erase(m_program.tokens.begin() + i + 1);
+						m_program.tokens.erase(m_program.tokens.begin() + i);
 					} else if(m_program.tokens[i].data > m_program.tokens[i + 1].data) {
 						//Take away the seconds' data, from the firsts', and then remove it
 						m_program.tokens[i].data -= m_program.tokens[i + 1].data;
@@ -419,13 +417,13 @@ enum BrainfInstructions {
 						m_program.tokens.erase(m_program.tokens.begin() + i);
 						i++;
 					}
+				} else {
+					i++;
 				}
+			} else {
+				i++;
 			}
 		}
-
-		*/
-
-		m_program.processed = true;
 	}
 
 }

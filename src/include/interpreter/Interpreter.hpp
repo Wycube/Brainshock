@@ -62,11 +62,7 @@ namespace bs {
 
 			if(!expr()) return false; //Program has invalid syntax
 
-			std::cout << "before" << std::endl;
-
 			preProcess();
-
-			std::cout << "after" << std::endl;
 
 			//This is called to update the jump locations of the brackets
 			if(!expr()) return false; //If there was an error in the optimizing, which shouldn't happen 
