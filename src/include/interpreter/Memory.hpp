@@ -26,7 +26,7 @@ namespace bs {
 		void fDump(DUMP_BASE base = BASE_HEX, bool ascii = false);
 
 		inline unsigned char& operator[] (std::size_t index) {
-			if(index < 0 || index > m_size) {
+			if(index < 0 || index > m_size - 1) {
 				outOfBounds = true;
 				return m_dummy;
 			}

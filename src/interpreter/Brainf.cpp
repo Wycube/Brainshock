@@ -285,10 +285,19 @@ enum BrainfInstructions {
 	*/
 	void BrainfInterpreter::preProcess() {
 		std::vector<Token> newTokens;
-
 		std::size_t i = 0;
 
-		//TODO: Remove all characters but <>-+,.[]
+		//Remove all characters but <>-+,.[]
+		for(std::size_t j = 0; j < m_program.length();) {
+			char c = m_program[j];
+
+			if(c != SHIFT_LEFT && c != SHIFT_RIGHT && c != INCREMENT && c != DECREMENT &&
+			   c != START_LOOP && c != END_LOOP    && c != INPUT     && c != OUTPUT) {
+				m_program.tokens.erase(m_program.tokens.begin() + j);
+			} else {
+				j++;
+			}
+		}
 
 		//First Pass
 		while(i < m_program.length()) {
@@ -349,7 +358,7 @@ enum BrainfInstructions {
 						std::string actual;
                                                                                                                         
 						for(std::size_t j = 0; j < 7; j++) {
-							actual += m_program.tokens[i + j].identifier;
+							actual += m_program.tokens[i + j + 2].identifier;
 						}	
 						
 						if(actual == expected) {
