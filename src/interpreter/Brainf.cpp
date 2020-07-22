@@ -28,7 +28,7 @@ enum BrainfInstructions {
 		std::string error;
 		
 		if(memory.outOfBounds) {
-			error = "Out-of-Bounds access on instruction '";
+			error = "Out-of-Bounds memory access on instruction '";
 			error += instruction;
 			error += "' at character ";
 			error += std::to_string(instPtr + 1);
@@ -49,8 +49,6 @@ enum BrainfInstructions {
 		}
 
 		Token inst = m_program.tokens[m_instPtr];
-		bool printed = false;
-		bool aprinted = false;
 
 		switch(inst.identifier) {
 			case SHIFT_RIGHT : m_dataPtr += inst.data;
@@ -61,11 +59,9 @@ enum BrainfInstructions {
 			break;
 			case DECREMENT : m_memory[m_dataPtr] -= inst.data;
 			break;
-			case START_LOOP : if(m_memory[m_dataPtr] == 0) m_instPtr += inst.data;
-						  if(!printed) {std::cout << "open:" << inst.data << std::endl; printed = true; }
+			case START_LOOP : if(m_memory[m_dataPtr] == 0) m_instPtr = inst.data;
 			break;
-			case END_LOOP : if(m_memory[m_dataPtr] != 0) m_instPtr -= inst.data;
-						if(!aprinted) {std::cout << "close:" << inst.data << std::endl; aprinted = true; }
+			case END_LOOP : if(m_memory[m_dataPtr] != 0) m_instPtr = inst.data;
 			break;
 			case INPUT : m_memory[m_dataPtr] = getChar();
 			break;
@@ -235,7 +231,7 @@ enum BrainfInstructions {
 
 	/**
 	* This method is responsible for putting certain data into tokens
-	* and validation check, for [] it can put relative jump information.
+	* and validation check, for [ and ] it can put jump information.
 	*
 	* @return Whether or not m_program has valid syntax.
 	*/
@@ -292,6 +288,8 @@ enum BrainfInstructions {
 
 		std::size_t i = 0;
 
+		//TODO: Remove all characters but <>-+,.[]
+
 		//First Pass
 		while(i < m_program.length()) {
 			char current = m_program.tokens[i].identifier;
@@ -313,9 +311,11 @@ enum BrainfInstructions {
 
 				newTokens.push_back(Token{current, sum});
 
-				i += sum + 1;
+				i += sum;
 			} else if(current == START_LOOP) {
 				
+				bool special = false; //Determines if a normal loop token should be pushed
+
 				//Check for very beginning of program
 				//These are usually for comments
 				if(i == 0) {
@@ -326,12 +326,38 @@ enum BrainfInstructions {
 					}
 
 					i += count + 1;
-				} else if(next == DECREMENT || next == INCREMENT) {
+
+					special = true;
+				} else if(next == INCREMENT) {
 					//Checks for the clear instruction
 					if(m_program.tokens[i + 2].identifier == END_LOOP) {
 						newTokens.push_back(Token{CLEAR, 1});
-
 						i += 3;
+
+						special = true;
+					}
+				} else if(next == DECREMENT) {
+					//Is it another clear instruction or is it a copy
+					if(m_program.tokens[i + 2].identifier == END_LOOP) {
+						newTokens.push_back(Token{CLEAR, 1});
+						i += 3;
+
+						special = true;
+					} else {
+						//Check for copy instruction
+						std::string expected = ">+>+<<]"; //Sequence is [->+>+<<]
+						std::string actual;
+                                                                                                                        
+						for(std::size_t j = 0; j < 7; j++) {
+							actual += m_program.tokens[i + j].identifier;
+						}	
+						
+						if(actual == expected) {
+							newTokens.push_back(Token{COPY, 1});
+							i += 9;
+
+							special = true;
+						}
 					}
 				} else if(previous == END_LOOP) {
 					//Gets rid of loops that occur right after another loop
@@ -344,30 +370,29 @@ enum BrainfInstructions {
 					}
 
 					i += count;
-				} else if(next == DECREMENT) {
-					//Check for copy instruction
-					std::string expected = ">+>+<<]";//Sequence is [->+>+<<]
-					std::string actual;
 
-					for(std::size_t j = 0; j < 7; j++) {
-						actual += m_program.tokens[i + j].identifier;
-					}
-
-					newTokens.push_back(Token{COPY, 1});
-
-					i += 9;
+					special = true;
+				} 
+				
+				//Nothing special just a start loop
+				if(!special) {
+					newTokens.push_back(Token{current, 1});
+					i++;
 				}
-			} else if(current == INPUT || current == OUTPUT) {
+			} else {
+				//These are just whatever
 				newTokens.push_back(Token{current, 1});
+				i++;
 			}
-
-			i++;
 		}
 
 		//Replace the token lists in m_program
 		m_program.tokens.swap(newTokens);
 		newTokens.clear();
 
+		i = 0;
+
+		/*
 
 		//Second Pass
 		while(i < m_program.length()) {
@@ -397,6 +422,8 @@ enum BrainfInstructions {
 				}
 			}
 		}
+
+		*/
 
 		m_program.processed = true;
 	}
