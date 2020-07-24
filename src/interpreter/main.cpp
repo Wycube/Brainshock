@@ -20,10 +20,12 @@ static std::unordered_map<std::string, int> strToNum = {
 	{"-version", 1}, {"v", 1}, //Print out version info
 	{"b", 2},                  //Print out runtime after execution
 	{"p", 3},                  //Processes the program before it's ran
+	{"O1", 4},                 //Optimizes the processed program significantly
+	{"O2", 5}                  //Optimizes the processed program a bit more
 };
 
 static struct {
-	bool flags[4] = {false};
+	bool flags[6] = {false};
 	std::string path = "";
 	bool repl = true;
 } options;
@@ -79,6 +81,8 @@ void evalLoop(bs::BrainfInterpreter &interpreter) {
 	std::string input;
 	std::chrono::milliseconds delta;
 
+	unsigned int optLevel = options.flags[5] ? 2 : options.flags[4] ? 1 : 0; //Optimization level, 2, 1, or 0(none)
+
 	while(true) {
 		std::cout << ": "; //This symbol is arbitrary I just needed something thats not a brainf*** instruction
 
@@ -87,15 +91,18 @@ void evalLoop(bs::BrainfInterpreter &interpreter) {
 		if(input == "exit")
 			return;
 
-		//-p Process the program if set
-		if(!interpreter.loadProgram(input.c_str(), options.flags[3], false)) {
+		//-p Process the program if set 
+		//-O1 and -O2 Specific optimizations
+		if(!interpreter.loadProgram(input.c_str(), options.flags[3], false, optLevel)) {
 			std::cerr << "Error: " << interpreter.getError() << std::endl;
 		} else {
 			//Timing Start
 			auto start = std::chrono::steady_clock::now();
+			
 
 			if(!interpreter.run())
 				std::cerr << "Error: " << interpreter.getError() << std::endl;
+
 
 			//Timing End
 			auto end = std::chrono::steady_clock::now();
@@ -105,7 +112,7 @@ void evalLoop(bs::BrainfInterpreter &interpreter) {
 		for(size_t i = 0; i < interpreter.getProgram().length(); i++)
 			if(!interpreter.getProgram().tokens.empty())std::cout << interpreter.getProgram()[i] << interpreter.getProgram().tokens[i].data;
 		std::cout << std::endl;
-		
+
 		interpreter.getMemory().fDump(bs::BASE_HEX, true);
 		//interpreter.getMemory().fPrint(interpreter.getDataPtr());
 
@@ -131,7 +138,9 @@ int main(int argc, char *argv[]) {
 		<< " -v --version Display version info\n"
 		<< std::endl
 		<< " -b           Display the program's runtime after execution\n"
-		<< " -p           Processes/Optimizes the program to an IR before it's ran"
+		<< " -p           Processes/Optimizes the program to an IR before it's ran\n"
+		<< " -O1          Optimizes the processed program significantly\n"
+		<< " -O2          Optimizes the processed program a bit more"
 		<< std::endl;
 
 		return 0;

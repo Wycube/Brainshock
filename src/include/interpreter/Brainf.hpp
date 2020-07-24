@@ -20,7 +20,7 @@ namespace bs {
 		bool stepProcessed();
 		bool stepUnprocessed();
 		bool expr() override;
-		void preProcess() override;
+		void preProcess(unsigned int optimization = 2) override;
 	};
 
 }

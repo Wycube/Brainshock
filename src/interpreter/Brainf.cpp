@@ -283,7 +283,7 @@ enum BrainfInstructions {
 	* instructions into one and other creative things I can find
 	* or think of, without modifying the behavior.
 	*/
-	void BrainfInterpreter::preProcess() {
+	void BrainfInterpreter::preProcess(unsigned int optimization) {
 		std::vector<Token> newTokens;
 		std::size_t i = 0;
 
@@ -298,6 +298,9 @@ enum BrainfInstructions {
 				j++;
 			}
 		}
+
+		if(optimization < 1)
+			return;
 
 		//First Pass
 		while(i < m_program.length()) {
@@ -400,6 +403,10 @@ enum BrainfInstructions {
 		newTokens.clear();
 
 		i = 0;
+
+
+		if(optimization < 2)
+			return;
 
 		//Second Pass
 		while(i < m_program.length()) {

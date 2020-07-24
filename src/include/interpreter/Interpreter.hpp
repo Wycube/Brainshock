@@ -20,7 +20,7 @@ namespace bs {
 		virtual bool run(float runSpeed = 0) = 0;
 		virtual bool step() = 0;
 	
-		inline bool loadProgram(const char *program, bool process = true, bool resetDataPtr = true);
+		inline bool loadProgram(const char *program, bool process = true, bool resetDataPtr = true, unsigned int optimization = 2);
 
 		//Getters
 		inline Program& getProgram() { return m_program; }
@@ -37,7 +37,7 @@ namespace bs {
 	protected:
 
 		virtual bool expr() = 0; //Checks for valid expressions
-		virtual void preProcess() = 0;
+		virtual void preProcess(unsigned int optimization = 2) = 0;
 
 		inline char getChar();
 
@@ -48,7 +48,7 @@ namespace bs {
 		std::string m_error;
 	};
 
-	inline bool Interpreter::loadProgram(const char *program, bool process, bool resetDataPtr) {
+	inline bool Interpreter::loadProgram(const char *program, bool process, bool resetDataPtr, unsigned int optimization) {
 		m_program = Program();
 		m_program.program = std::string(program);
 
@@ -62,10 +62,12 @@ namespace bs {
 
 			if(!expr()) return false; //Program has invalid syntax
 
-			preProcess();
+			if(optimization > 0) {
+				preProcess(optimization);
 
-			//This is called to update the jump locations of the brackets
-			if(!expr()) return false; //If there was an error in the optimizing, which shouldn't happen 
+				//This is called to update the jump locations of the brackets
+				if(!expr()) return false; //If there was an error in the optimizing, which shouldn't happen
+			}	
 		}
 
 		return true;
