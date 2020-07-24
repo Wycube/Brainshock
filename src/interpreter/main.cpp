@@ -3,6 +3,7 @@
  */
 
 #include <iostream>
+#include <sstream>
 #include <fstream>
 #include <chrono>
 #include <string>
@@ -77,7 +78,7 @@ void parseArgs(int argc, char *argv[]) {
  * This does not pre-process the input string, but just runs it 
  * directly in the interpreter.
  */
-void evalLoop(bs::BrainfInterpreter &interpreter) {
+void evalLoop(bs::BrainfInterpreter &interpreter, std::stringbuf &buffer) {
 	std::string input;
 	std::chrono::milliseconds delta;
 
@@ -90,7 +91,11 @@ void evalLoop(bs::BrainfInterpreter &interpreter) {
 
 		if(input == "exit")
 			return;
-
+		else if(input == "prog") { //Should replace with a better version soon
+			for(size_t i = 0; i < interpreter.getProgram().length(); i++)
+				std::cout << interpreter.getProgram()[i] << (interpreter.getProgram().processed ? interpreter.getProgram().tokens[i].data : 1);
+			std::cout << std::endl;
+		}
 		//-p Process the program if set 
 		//-O1 and -O2 Specific optimizations
 		if(!interpreter.loadProgram(input.c_str(), options.flags[3], false, optLevel)) {
@@ -109,18 +114,17 @@ void evalLoop(bs::BrainfInterpreter &interpreter) {
 			delta = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
 		}
 
-		for(size_t i = 0; i < interpreter.getProgram().length(); i++)
-			if(!interpreter.getProgram().tokens.empty())std::cout << interpreter.getProgram()[i] << interpreter.getProgram().tokens[i].data;
-		std::cout << std::endl;
-
 		interpreter.getMemory().fDump(bs::BASE_HEX, true);
 		//interpreter.getMemory().fPrint(interpreter.getDataPtr());
 
 		//-b Print Timing
 		if(options.flags[2])
 			std::cout << "Finished in " << delta.count() << "ms" << std::endl;
-		else
-			std::cout << std::endl;	
+		else if(buffer.str() != "")\
+			std::cout << buffer.str() << std::endl;
+
+		//clear the buffer
+		buffer.str("");
 	}
 }
 
@@ -153,12 +157,17 @@ int main(int argc, char *argv[]) {
 		return 0;
 	}
 
-	//Create Interpreter for next steps
-	bs::BrainfInterpreter interpreter = bs::BrainfInterpreter();
-
 	//Go into interactive mode
 	if(options.repl) {
-		evalLoop(interpreter);
+		//Create Interpreter for next steps and ostream plus buffer
+		std::stringbuf buffer;
+		std::ostream stream(nullptr);
+		stream.rdbuf(&buffer);
+		bs::BrainfInterpreter interpreter = bs::BrainfInterpreter(stream);
+
+		evalLoop(interpreter, buffer);
 		return 0;
+	} else {
+		//DO file stuff here
 	}
 }

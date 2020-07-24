@@ -8,7 +8,7 @@ namespace bs {
 	class BrainfInterpreter : public Interpreter {
 	public:
 
-		BrainfInterpreter(std::size_t memSize = 30000);
+		BrainfInterpreter(std::ostream &stream = std::cout, std::size_t memSize = 30000);
 
 		bool run(float runSpeed = 0) override;
 		bool step() override;
@@ -16,6 +16,7 @@ namespace bs {
 	private:
 
 		std::deque<std::size_t> m_jumpTable;
+		std::ostream &m_stream;
 
 		bool stepProcessed();
 		bool stepUnprocessed();

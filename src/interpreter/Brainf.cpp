@@ -20,7 +20,7 @@ enum BrainfInstructions {
 };
 
 
-	BrainfInterpreter::BrainfInterpreter(std::size_t memSize) {
+	BrainfInterpreter::BrainfInterpreter(std::ostream &stream, std::size_t memSize) : m_stream(stream) {
 		m_memory = Tape(memSize);
 	}
 
@@ -65,7 +65,7 @@ enum BrainfInstructions {
 			break;
 			case INPUT : m_memory[m_dataPtr] = getChar();
 			break;
-			case OUTPUT : std::cout << m_memory[m_dataPtr];
+			case OUTPUT : m_stream << m_memory[m_dataPtr];
 			break;
 			case CLEAR : m_memory[m_dataPtr] = 0;
 			break;
@@ -160,7 +160,7 @@ enum BrainfInstructions {
 			break;
 			case INPUT : m_memory[m_dataPtr] = getChar();
 			break;
-			case OUTPUT : std::cout << m_memory[m_dataPtr];
+			case OUTPUT : m_stream << m_memory[m_dataPtr];
 			break;
 		}
 
