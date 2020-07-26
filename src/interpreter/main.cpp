@@ -81,30 +81,51 @@ void parseArgs(int argc, char *argv[]) {
 //This will tell the program which commands are set or input
 struct CommandFlags {
 	bool exit = false; //Exits the REPl
+	bool help = false; //Displays a help message showing all commands
 	bool prog = false; //Displays the program that is being interpreted after processing and such
 	bool dump = false; //Dumps the memory in a certain base
 	bs::DUMP_BASE dumpBase;
+	bs::DUMP_BASE setBase;
 	bool time = false; //Prints the amount of time the interpreter took to run the last program
 	bool mem = false;  //Prints the current cells value and some around it, in decimal
+	bool set[4] = { false };
 
 	void clear() {
 		exit = false;
-		prog = false;
-		dump = false;
-		time = false;
-		mem  = false;
+		help = false;
+		prog = set[0];
+		dump = set[1];
+		time = set[2];
+		mem  = set[3];
+
+		if(set[1])
+			dumpBase = setBase;
 	}
 } comflags;
 
 //A helper function for finding out if and which command was inputted
-bool parseCommand(std::string input) {
-	if(input == "exit")           comflags.exit = true;
-	else if(input == "prog")      comflags.prog = true;
-	else if(input == "hexdump") { comflags.dump = true; comflags.dumpBase = bs::BASE_HEX; }
-	else if(input == "decdump") { comflags.dump = true; comflags.dumpBase = bs::BASE_DEC; }
-	else if(input == "bindump") { comflags.dump = true; comflags.dumpBase = bs::BASE_BIN; }
-	else if(input == "time")      comflags.time = true;
-	else if(input == "mem")       comflags.mem = true;
+bool parseCommand(std::string str) {
+	std::string input = str;
+	bool set = false, unset = false;
+
+	//Check for set
+	if(str.substr(0, 4) == "set ") {
+		input = str.substr(4);
+		set = true;
+	} else if(str.substr(0, 6) == "unset ") {
+		input = str.substr(6);
+		unset = true;
+	}
+
+
+	if(input == "exit")           comflags.exit = true; //Can't set exit or help, don't be absurd
+	else if(input == "help")      comflags.help = true; 
+	else if(input == "prog")    { comflags.prog = true; comflags.set[0] = set ? true : unset ? false : comflags.set[0]; }
+	else if(input == "hexdump") { comflags.dump = true; comflags.dumpBase = bs::BASE_HEX; if(set) comflags.setBase = bs::BASE_HEX; comflags.set[1] = set ? true : unset ? false : comflags.set[1]; }
+	else if(input == "decdump") { comflags.dump = true; comflags.dumpBase = bs::BASE_DEC; if(set) comflags.setBase = bs::BASE_DEC; comflags.set[1] = set ? true : unset ? false : comflags.set[1]; }
+	else if(input == "bindump") { comflags.dump = true; comflags.dumpBase = bs::BASE_BIN; if(set) comflags.setBase = bs::BASE_BIN; comflags.set[1] = set ? true : unset ? false : comflags.set[1]; }
+	else if(input == "time")    { comflags.time = true; comflags.set[2] = set ? true : unset ? false : comflags.set[2]; }
+	else if(input == "mem")     { comflags.mem = true;  comflags.set[3] = set ? true : unset ? false : comflags.set[3]; }
 	else return false;
 
 	return true;
@@ -113,6 +134,23 @@ bool parseCommand(std::string input) {
 //Prints whatever the set commands are suppose to
 void printInfo(bs::BrainfInterpreter &interpreter, std::chrono::microseconds runtime) {
 	bs::Program &program = interpreter.getProgram();
+
+	//Help message
+	if(comflags.help) {
+		std::cout << " Commands will print useful information about the state"
+			  << " of the interpreter.\n"
+			  << " Commands can be set to run everytime with \"set [command]\""
+			  << " and \"unset [command]\".\n\n"  
+			  << " help - Prints this help message\n"
+			  << " exit - Exits the REPL\n"
+			  << " prog - Prints the programs instructions, only useful with optimizing\n"
+			  << " dump - Prints entire memory, append base \"hexdump bindump decdump\"\n"
+			  << " mem  - Prints the memory at and around the current cell\n"
+			  << " time - Prints the runtime of the last program"
+			  << std::endl;
+
+		return; //Don't do anything else
+	} 
 
 	if(comflags.prog) {
 		std::cout << "Program: ";
@@ -137,12 +175,17 @@ void evalLoop(bs::BrainfInterpreter &interpreter, std::stringbuf &buffer) {
 
 	unsigned int optLevel = options.flags[5] ? 2 : options.flags[4] ? 1 : 0; //Optimization level, 2, 1, or 0(none)
 
+	//Some flags set commands
+	if(options.flags[2]) //-b setting the "time" command
+	       comflags.set[2] = true;	
+	comflags.clear(); //Just to reset the flags at the beginning	
+
 	while(true) {
 		std::cout << ": "; //This symbol is arbitrary I just needed something thats not a brainf*** instruction
 		std::getline(std::cin, input);
 
 		//Command stuff, if it's not a command run it in the interpreter
-		if(parseCommand(input)) {
+		if(parseCommand(input) || input == "") {
 			if(comflags.exit)
 				return;
 
