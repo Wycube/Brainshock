@@ -118,14 +118,30 @@ bool parseCommand(std::string str) {
 	}
 
 
-	if(input == "exit")           comflags.exit = true; //Can't set exit or help, don't be absurd
-	else if(input == "help")      comflags.help = true; 
-	else if(input == "prog")    { comflags.prog = true; comflags.set[0] = set ? true : unset ? false : comflags.set[0]; }
-	else if(input == "hexdump") { comflags.dump = true; comflags.dumpBase = bs::BASE_HEX; if(set) comflags.setBase = bs::BASE_HEX; comflags.set[1] = set ? true : unset ? false : comflags.set[1]; }
-	else if(input == "decdump") { comflags.dump = true; comflags.dumpBase = bs::BASE_DEC; if(set) comflags.setBase = bs::BASE_DEC; comflags.set[1] = set ? true : unset ? false : comflags.set[1]; }
-	else if(input == "bindump") { comflags.dump = true; comflags.dumpBase = bs::BASE_BIN; if(set) comflags.setBase = bs::BASE_BIN; comflags.set[1] = set ? true : unset ? false : comflags.set[1]; }
-	else if(input == "time")    { comflags.time = true; comflags.set[2] = set ? true : unset ? false : comflags.set[2]; }
-	else if(input == "mem")     { comflags.mem = true;  comflags.set[3] = set ? true : unset ? false : comflags.set[3]; }
+	if(input == "exit")           comflags.exit = true && !unset; //Can't set exit or help, don't be absurd
+	else if(input == "help")      comflags.help = true && !unset; //AND true with !unset to not run if unsetting
+
+	else if(input == "prog")    { comflags.prog = true && !unset;
+	       			      comflags.set[0] = set ? true : unset ? false : comflags.set[0]; }
+
+	else if(input == "hexdump") { comflags.dump = true && !unset;
+	       			      comflags.dumpBase = bs::BASE_HEX;
+				      if(set) comflags.setBase = bs::BASE_HEX;
+				      comflags.set[1] = set ? true : unset ? false : comflags.set[1]; }
+	else if(input == "decdump") { comflags.dump = true && !unset; 
+				      comflags.dumpBase = bs::BASE_DEC;
+				      if(set) comflags.setBase = bs::BASE_DEC;
+				      comflags.set[1] = set ? true : unset ? false : comflags.set[1]; }
+	else if(input == "bindump") { comflags.dump = true && !unset;
+	       		       	      comflags.dumpBase = bs::BASE_BIN;
+				      if(set) comflags.setBase = bs::BASE_BIN; 
+				      comflags.set[1] = set ? true : unset ? false : comflags.set[1]; }
+
+	else if(input == "time")    { comflags.time = true && !unset;
+	       			      comflags.set[2] = set ? true : unset ? false : comflags.set[2]; }
+
+	else if(input == "mem")     { comflags.mem = true && !unset;
+	      		     	      comflags.set[3] = set ? true : unset ? false : comflags.set[3]; }
 	else return false;
 
 	return true;
