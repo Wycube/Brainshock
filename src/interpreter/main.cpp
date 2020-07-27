@@ -167,7 +167,7 @@ void printInfo(bs::BrainfInterpreter &interpreter, std::chrono::microseconds run
 }
 
 /*
- * A basic REPL with the commands aswell.
+ * A basic REPL, with the commands aswell.
  */
 void evalLoop(bs::BrainfInterpreter &interpreter, std::stringbuf &buffer) {
 	std::string input;
@@ -179,6 +179,16 @@ void evalLoop(bs::BrainfInterpreter &interpreter, std::stringbuf &buffer) {
 	if(options.flags[2]) //-b setting the "time" command
 	       comflags.set[2] = true;	
 	comflags.clear(); //Just to reset the flags at the beginning	
+
+	//Check for unused flags and warn
+	//-O1 and/or -O2 if -p is not set
+	if((options.flags[4] || options.flags[5]) && !options.flags[3]) {
+		std::cerr << "Warning: ";
+		if(options.flags[4]) std::cerr << "-O1 ";
+		if(options.flags[5]) std::cerr << "-O2 ";
+		std::cerr << "unused" << std::endl;
+	}
+
 
 	while(true) {
 		std::cout << ": "; //This symbol is arbitrary I just needed something thats not a brainf*** instruction
