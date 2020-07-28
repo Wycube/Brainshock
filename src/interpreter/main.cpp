@@ -21,10 +21,10 @@ const int patch = 0;
 static std::unordered_map<std::string, int> strToNum = {
 	{"-help", 0}, {"h", 0},    //Print out the usage message
 	{"-version", 1}, {"v", 1}, //Print out version info
-	{"b", 2},                  //Print out runtime after execution
-	{"p", 3},                  //Processes the program before it's ran
-	{"O1", 4},                 //Optimizes the processed program significantly
-	{"O2", 5}                  //Optimizes the processed program a bit more
+	{"p", 2},                  //Processes the program before it's ran
+	{"O1", 3},                 //Optimizes the processed program significantly
+	{"O2", 4},                 //Optimizes the processed program a bit more
+	{"b", 5}                   //Print out runtime after execution
 };
 
 static struct {
@@ -189,19 +189,19 @@ void evalLoop(bs::BrainfInterpreter &interpreter, std::stringbuf &buffer) {
 	std::string input;
 	std::chrono::microseconds delta;
 
-	unsigned int optLevel = options.flags[5] ? 2 : options.flags[4] ? 1 : 0; //Optimization level, 2, 1, or 0(none)
+	unsigned int optLevel = options.flags[4] ? 2 : options.flags[3] ? 1 : 0; //Optimization level, 2, 1, or 0(none)
 
 	//Some flags set commands
-	if(options.flags[2]) //-b setting the "time" command
+	if(options.flags[5]) //-b setting the "time" command
 	       comflags.set[2] = true;	
 	comflags.clear(); //Just to reset the flags at the beginning	
 
 	//Check for unused flags and warn
 	//-O1 and/or -O2 if -p is not set
-	if((options.flags[4] || options.flags[5]) && !options.flags[3]) {
+	if((options.flags[3] || options.flags[4]) && !options.flags[2]) {
 		std::cerr << "Warning: ";
-		if(options.flags[4]) std::cerr << "-O1 ";
-		if(options.flags[5]) std::cerr << "-O2 ";
+		if(options.flags[3]) std::cerr << "-O1 ";
+		if(options.flags[4]) std::cerr << "-O2 ";
 		std::cerr << "unused" << std::endl;
 	}
 
@@ -260,10 +260,10 @@ int main(int argc, char *argv[]) {
 		<< " -h --help    Display this help message\n"
 		<< " -v --version Display version info\n"
 		<< std::endl
-		<< " -b           Display the program's runtime after execution\n"
 		<< " -p           Processes/Optimizes the program to an IR before it's ran\n"
 		<< " -O1          Optimizes the processed program significantly\n"
-		<< " -O2          Optimizes the processed program a bit more past O1"
+		<< " -O2          Optimizes the processed program a bit more past O1\n"
+		<< " -b           Display the program's run time after execution"
 		<< std::endl;
 
 		return 0;
