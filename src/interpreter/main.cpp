@@ -182,7 +182,7 @@ void printInfo(bs::BrainfInterpreter &interpreter, std::chrono::microseconds run
 	if(comflags.mem)
 		interpreter.getMemory().fPrint(interpreter.getDataPtr());
 	if(comflags.time)
-		std::cout << "Finished in " << static_cast<double>(runtime.count() / 1000.0) << "ms" << std::endl; //Divide by a thousand for milliseconds
+		std::cout << "Finished in " << static_cast<double>(runtime.count() / 1000.0) << "ms or " << static_cast<double>(runtime.count() / 1000000.0)<< "s" << std::endl; //Divide by a thousand for milliseconds and a million for seconds
 }
 
 /*
