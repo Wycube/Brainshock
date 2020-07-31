@@ -92,10 +92,17 @@ enum BrainfInstructions {
 		success = true;
 		
 		if(value == 0) {
+			unsigned int open = 0;
+
 			//Search for ending bracket
-			for(std::size_t i = instPtr; i < program.length(); i++) {
+			for(std::size_t i = instPtr + 1; i < program.length(); i++) {
 				if(program.program[i] == ']')
-					return i + 1;
+					if(open == 0)
+						return i;
+					else
+						open--;
+				else if(program.program[i] == '[')
+					open++;
 			}
 
 			//Couldn't find ending bracket
@@ -131,8 +138,7 @@ enum BrainfInstructions {
 				jumpValue = handleStartLoop(m_memory[m_dataPtr], m_program, m_instPtr, success);
 
 				if(jumpValue == 0) {
-					m_jumpTable.push_back(m_instPtr + 1);
-					std::cout << "pushed " << (m_instPtr + 1) << std::endl;	
+					m_jumpTable.push_back(m_instPtr);	
 				} else if(success) {
 					m_instPtr = jumpValue;
 				} else {
@@ -154,9 +160,7 @@ enum BrainfInstructions {
 
 				if(m_memory[m_dataPtr] != 0) {
 					m_instPtr = m_jumpTable.back();
-					return true; //Return here so we don't increment the instruction pointer
 				} else {
-					std::cout << "popped " << m_jumpTable.back() << " at " << m_instPtr << std::endl;
 					m_jumpTable.pop_back();
 				}
 			break;
