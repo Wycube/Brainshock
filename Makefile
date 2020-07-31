@@ -7,7 +7,7 @@ OBJ_DIR := obj/interpreter
 INC_DIR := src/include/interpreter
 
 BUILD_TYPE ?= DEBUG
-FLAGS = -Wall -I$(INC_DIR)
+FLAGS = -std=c++17 -Wall -I$(INC_DIR)
 
 ifeq ($(BUILD_TYPE), DEBUG) 
 	FLAGS += -g

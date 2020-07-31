@@ -65,7 +65,7 @@ enum BrainfInstructions {
 			break;
 			case INPUT : m_memory[m_dataPtr] = getChar();
 			break;
-			case OUTPUT : m_stream << m_memory[m_dataPtr];
+			case OUTPUT : m_stream << m_memory[m_dataPtr] << std::flush;
 			break;
 			case CLEAR : m_memory[m_dataPtr] = 0;
 			break;
@@ -91,11 +91,18 @@ enum BrainfInstructions {
 	size_t handleStartLoop(unsigned char value, Program &program, std::size_t instPtr, bool &success) {
 		success = true;
 		
-		if(!value) {
+		if(value == 0) {
+			unsigned int open = 0;
+
 			//Search for ending bracket
-			for(std::size_t i = instPtr; i < program.length(); i++) {
+			for(std::size_t i = instPtr + 1; i < program.length(); i++) {
 				if(program.program[i] == ']')
-					return i + 1;
+					if(open == 0)
+						return i;
+					else
+						open--;
+				else if(program.program[i] == '[')
+					open++;
 			}
 
 			//Couldn't find ending bracket
@@ -131,7 +138,7 @@ enum BrainfInstructions {
 				jumpValue = handleStartLoop(m_memory[m_dataPtr], m_program, m_instPtr, success);
 
 				if(jumpValue == 0) {
-					m_jumpTable.push_back(m_instPtr + 1);
+					m_jumpTable.push_back(m_instPtr);	
 				} else if(success) {
 					m_instPtr = jumpValue;
 				} else {
@@ -153,14 +160,13 @@ enum BrainfInstructions {
 
 				if(m_memory[m_dataPtr] != 0) {
 					m_instPtr = m_jumpTable.back();
-					return true; //Return here so we don't increment the instruction pointer
 				} else {
 					m_jumpTable.pop_back();
 				}
 			break;
 			case INPUT : m_memory[m_dataPtr] = getChar();
 			break;
-			case OUTPUT : m_stream << m_memory[m_dataPtr];
+			case OUTPUT : m_stream << m_memory[m_dataPtr] << std::flush;
 			break;
 		}
 
@@ -209,8 +215,13 @@ enum BrainfInstructions {
 		auto lastTime = currentTime;
 
 		if(!regulate) {
-			while(m_instPtr < m_program.length())
-				if(!step()) return false;
+			if(m_program.processed) {
+				while(m_instPtr < m_program.length())
+					if(!stepProcessed()) return false;
+			} else {
+				while(m_instPtr < m_program.length())
+					if(!stepUnprocessed()) return false;
+			}
 		} else {
 			while(m_instPtr < m_program.length()) {
 					currentTime = std::chrono::steady_clock::now();

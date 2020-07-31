@@ -5,6 +5,7 @@
 #include <iostream>
 #include <sstream>
 #include <fstream>
+#include <filesystem>
 #include <chrono>
 #include <string>
 #include <unordered_map>
@@ -19,16 +20,18 @@ const int patch = 0;
 //---------- Command Line / Args ----------//
 
 static std::unordered_map<std::string, int> strToNum = {
-	{"-help", 0}, {"h", 0},    //Print out the usage message
+	{"-help",    0}, {"h", 0}, //Print out the usage message
 	{"-version", 1}, {"v", 1}, //Print out version info
-	{"b", 2},                  //Print out runtime after execution
-	{"p", 3},                  //Processes the program before it's ran
-	{"O1", 4},                 //Optimizes the processed program significantly
-	{"O2", 5}                  //Optimizes the processed program a bit more
+	{"p",  2},                 //Processes the program before it's ran
+	{"O1", 3},                 //Optimizes the processed program significantly
+	{"O2", 4},                 //Optimizes the processed program a bit more
+	{"b",  5},                 //Print out runtime after execution
+	{"md", 6},                 //Prints a dump of the entire memory
+	{"mp", 7}                  //Prints the current cell and some around it
 };
 
 static struct {
-	bool flags[6] = {false};
+	bool flags[8] = {false};
 	std::string path = "";
 	bool repl = true;
 } options;
@@ -79,7 +82,7 @@ void parseArgs(int argc, char *argv[]) {
 //---------- REPL Stuff ----------//
 
 //This will tell the program which commands are set or input
-struct CommandFlags {
+static struct CommandFlags {
 	bool exit = false; //Exits the REPl
 	bool help = false; //Displays a help message showing all commands
 	bool prog = false; //Displays the program that is being interpreted after processing and such
@@ -179,7 +182,7 @@ void printInfo(bs::BrainfInterpreter &interpreter, std::chrono::microseconds run
 	if(comflags.mem)
 		interpreter.getMemory().fPrint(interpreter.getDataPtr());
 	if(comflags.time)
-		std::cout << "Finished in " << static_cast<double>(runtime.count() / 1000.0) << "ms" << std::endl; //Divide by a thousand for milliseconds
+		std::cout << "Finished in " << static_cast<double>(runtime.count() / 1000.0) << "ms or " << static_cast<double>(runtime.count() / 1000000.0)<< "s" << std::endl; //Divide by a thousand for milliseconds and a million for seconds
 }
 
 /*
@@ -189,19 +192,23 @@ void evalLoop(bs::BrainfInterpreter &interpreter, std::stringbuf &buffer) {
 	std::string input;
 	std::chrono::microseconds delta;
 
-	unsigned int optLevel = options.flags[5] ? 2 : options.flags[4] ? 1 : 0; //Optimization level, 2, 1, or 0(none)
+	unsigned int optLevel = options.flags[4] ? 2 : options.flags[3] ? 1 : 0; //Optimization level, 2, 1, or 0(none)
 
 	//Some flags set commands
-	if(options.flags[2]) //-b setting the "time" command
+	if(options.flags[5]) //-b setting the "time" command
 	       comflags.set[2] = true;	
+	if(options.flags[6]) //-md setting the "dump" command
+		comflags.set[1] = true;
+	if(options.flags[7]) //-mp setting the "mem" command
+		comflags.set[3] = true;
 	comflags.clear(); //Just to reset the flags at the beginning	
 
 	//Check for unused flags and warn
 	//-O1 and/or -O2 if -p is not set
-	if((options.flags[4] || options.flags[5]) && !options.flags[3]) {
+	if((options.flags[3] || options.flags[4]) && !options.flags[2]) {
 		std::cerr << "Warning: ";
-		if(options.flags[4]) std::cerr << "-O1 ";
-		if(options.flags[5]) std::cerr << "-O2 ";
+		if(options.flags[3]) std::cerr << "-O1 ";
+		if(options.flags[4]) std::cerr << "-O2 ";
 		std::cerr << "unused" << std::endl;
 	}
 
@@ -217,7 +224,7 @@ void evalLoop(bs::BrainfInterpreter &interpreter, std::stringbuf &buffer) {
 
 		//-p Process the program if set 
 		//-O1 and -O2 Specific optimizations
-		} else if(!interpreter.loadProgram(input.c_str(), options.flags[3], false, optLevel)) {
+		} else if(!interpreter.loadProgram(input.c_str(), options.flags[2], false, optLevel)) {
 			std::cerr << "Error: " << interpreter.getError() << std::endl;
 		} else {
 			//Timing Start
@@ -260,10 +267,12 @@ int main(int argc, char *argv[]) {
 		<< " -h --help    Display this help message\n"
 		<< " -v --version Display version info\n"
 		<< std::endl
-		<< " -b           Display the program's runtime after execution\n"
 		<< " -p           Processes/Optimizes the program to an IR before it's ran\n"
 		<< " -O1          Optimizes the processed program significantly\n"
-		<< " -O2          Optimizes the processed program a bit more past O1"
+		<< " -O2          Optimizes the processed program a bit more past O1\n"
+		<< " -b           Display the program's run time after execution\n"
+		<< " -md          Display a dump of the entire memory after execution\n"
+		<< " -mp          Display the current cell and a few around it after execution"
 		<< std::endl;
 
 		return 0;
@@ -286,6 +295,56 @@ int main(int argc, char *argv[]) {
 		evalLoop(interpreter, buffer);
 		return 0;
 	} else {
-		//DO file stuff here
+		bs::BrainfInterpreter interpreter = bs::BrainfInterpreter(std::cout);
+		std::ifstream file(options.path);
+
+		//Check for file validity
+		if(!std::filesystem::exists(options.path)) {
+			std::cerr << "Error: File provided does not exist" << std::endl;
+			return 3;
+		} else if(!file.good()) {
+			std::cerr << "Error: Could not access file" << std::endl;
+			return 3;
+		}
+
+		//Read in program from the file
+		std::stringstream buffer;
+		buffer << file.rdbuf();
+		file.close();
+
+		unsigned int optLevel = options.flags[4] ? 2 : options.flags[3] ? 1 : 0;
+		std::chrono::microseconds delta;
+		
+		//-p should the program be preprocessed
+		if(!interpreter.loadProgram(buffer.str().c_str(), options.flags[2], true, optLevel)) {
+			std::cerr << "Error :" << interpreter.getError() << std::endl;
+			return 4;
+		} else {
+			//Timing start
+			auto start = std::chrono::steady_clock::now();	
+		
+
+			if(!interpreter.run()) {
+				std::cerr << "Error: " << interpreter.getError() << std::endl;		
+				for(size_t i = interpreter.getInstPtr() - 30; i < interpreter.getInstPtr() + 30; i++) {
+					std::cout << interpreter.getProgram()[i];
+				}
+				std::cout << std::endl << "jumptable: ";
+				for(size_t i = 0; i < interpreter.m_jumpTable.size(); i++)
+					std::cout << interpreter.m_jumpTable.at(i);
+				std::cout << std::endl;
+			}
+
+			//Timing end
+			auto end = std::chrono::steady_clock::now();
+			delta = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+		}
+
+		//Use the command struct and functions to print the information
+		comflags.time = options.flags[5];
+		comflags.dump = options.flags[6];
+		comflags.mem  = options.flags[7];
+
+		printInfo(interpreter, delta);
 	}
 }

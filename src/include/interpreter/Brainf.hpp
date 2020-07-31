@@ -15,6 +15,7 @@ namespace bs {
 
 	private:
 
+	public:
 		std::deque<std::size_t> m_jumpTable;
 		std::ostream &m_stream;
 
