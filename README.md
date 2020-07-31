@@ -1,2 +1,2 @@
 # Brainshock
-A Brainf*** interpreter and compiler.
+A Brainf*** interpreter and compiler, but not yet.
