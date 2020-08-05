@@ -15,7 +15,7 @@
 //Semantic Versioning
 const int major = 0;
 const int minor = 2;
-const int patch = 0;
+const int patch = 1;
 
 //---------- Command Line / Args ----------//
 
@@ -173,7 +173,9 @@ void printInfo(bs::BrainfInterpreter &interpreter, std::chrono::microseconds run
 
 	if(comflags.prog) {
 		std::cout << "Program: ";
-		for(std::size_t i = 0; i < program.length(); i++)
+		
+		std::size_t length = program.processed ? program.tokens.size() : program.program.size();
+		for(std::size_t i = 0; i < length; i++)
 			std::cout << program[i] << (program.processed ? program.tokens[i].data : static_cast<char>(0));
 		std::cout << std::endl;
 	} 
@@ -329,10 +331,6 @@ int main(int argc, char *argv[]) {
 				for(size_t i = interpreter.getInstPtr() - 30; i < interpreter.getInstPtr() + 30; i++) {
 					std::cout << interpreter.getProgram()[i];
 				}
-				std::cout << std::endl << "jumptable: ";
-				for(size_t i = 0; i < interpreter.m_jumpTable.size(); i++)
-					std::cout << interpreter.m_jumpTable.at(i);
-				std::cout << std::endl;
 			}
 
 			//Timing end

@@ -37,13 +37,58 @@ enum BrainfInstructions {
 
 		return error;
 	}
+	
+	bool BrainfInterpreter::loadProgram(const char *program, bool process, bool resetDataPtr, unsigned int optimization) {
+		m_program = Program();
+		m_program.program = std::string(program);
 
+		m_instPtr = 0;
+
+		if(resetDataPtr)
+			m_dataPtr = 0;
+
+		if(process) {
+			m_program.tokenize();
+
+			if(!expr()) return false; //Program has invalid syntax
+
+			if(optimization > 0) {
+				preProcess(optimization);
+
+				//This is called to update the jump locations of the brackets
+				if(!expr()) return false; //If there was an error in the optimizing, which shouldn't happen
+			}	
+		}
+
+		return true;
+	}
+
+	char BrainfInterpreter::getChar() {
+		char temp;
+
+		if(m_inBuffer.empty()) {
+			std::string input;
+			
+			//If there was nothing entered prompt again
+			while(input == "")
+				std::getline(std::cin, input);
+
+			for(std::size_t i = 0; i < input.length(); i++) {
+				m_inBuffer.push_front(input[i]);
+			}
+		}
+
+		temp = m_inBuffer.back();
+		m_inBuffer.pop_back();
+
+		return temp;
+	}
 
 	bool BrainfInterpreter::stepProcessed() {
 		if(m_program.tokens.empty()) {
 			m_error = "No program provided";
 			return false;
-		} else if(m_instPtr > m_program.length()) {
+		} else if(m_instPtr > m_program.tokens.size()) {
 			m_error = "Execution gone past end of program";
 			return false;
 		}
@@ -95,7 +140,7 @@ enum BrainfInstructions {
 			unsigned int open = 0;
 
 			//Search for ending bracket
-			for(std::size_t i = instPtr + 1; i < program.length(); i++) {
+			for(std::size_t i = instPtr + 1; i < program.program.size(); i++) {
 				if(program.program[i] == ']')
 					if(open == 0)
 						return i;
@@ -116,7 +161,7 @@ enum BrainfInstructions {
 	}
 
 	bool BrainfInterpreter::stepUnprocessed() {
-		if(m_instPtr > m_program.length()) {
+		if(m_instPtr > m_program.program.size()) {
 			m_error = "Execution gone past the end of the program instructions";
 			return false;
 		}
@@ -143,8 +188,8 @@ enum BrainfInstructions {
 					m_instPtr = jumpValue;
 				} else {
 					m_error = "No matching bracket ] for instruction '";
-				       	m_error	+= inst;
-				       	m_error	+= "' at character ";
+					m_error	+= inst;
+					m_error	+= "' at character ";
 					m_error += std::to_string(m_instPtr + 1);
 					return false;
 				}
@@ -205,35 +250,51 @@ enum BrainfInstructions {
 	bool BrainfInterpreter::run(float runSpeed) {
 		if(runSpeed < 0)
 			runSpeed = 0; //Just set zero for anything negative
-
+		
 		bool regulate = runSpeed != 0;
-
-		int milliPerInst = regulate ? 1 / runSpeed : 0;
-		std::chrono::milliseconds delta;
-		auto execTime = std::chrono::milliseconds(milliPerInst);
-		auto currentTime = std::chrono::steady_clock::now();
-		auto lastTime = currentTime;
 
 		if(!regulate) {
 			if(m_program.processed) {
-				while(m_instPtr < m_program.length())
+				while(m_instPtr < m_program.tokens.size())
 					if(!stepProcessed()) return false;
 			} else {
-				while(m_instPtr < m_program.length())
+				while(m_instPtr < m_program.program.size())
 					if(!stepUnprocessed()) return false;
 			}
 		} else {
-			while(m_instPtr < m_program.length()) {
+			//Initialize variables for timing
+			int milliPerInst = regulate ? 1 / runSpeed : 0;
+			std::chrono::milliseconds delta;
+			auto execTime = std::chrono::milliseconds(milliPerInst);
+			auto currentTime = std::chrono::steady_clock::now();
+			auto lastTime = currentTime;
+
+			if(m_program.processed) {
+				while(m_instPtr < m_program.tokens.size()) {
 					currentTime = std::chrono::steady_clock::now();
 					delta = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - lastTime);
 					lastTime = currentTime;
 
-				//Should the execution be stopped for a bit to stay in time
-				if(delta > execTime) {
-					std::this_thread::sleep_for(delta - execTime);
-				}
+					//Should the execution be stopped for a bit to stay in time
+					if(delta > execTime) {
+						std::this_thread::sleep_for(delta - execTime);
+					}
 
-				if(!step()) return false;
+					if(!stepProcessed()) return false;
+				}
+			} else {
+				while(m_instPtr < m_program.program.size()) {
+					currentTime = std::chrono::steady_clock::now();
+					delta = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - lastTime);
+					lastTime = currentTime;
+
+					//Should the execution be stopped for a bit to stay in time
+					if(delta > execTime) {
+						std::this_thread::sleep_for(delta - execTime);
+					}
+
+					if(!stepUnprocessed()) return false;
+				}
 			}
 		}
 
@@ -249,7 +310,7 @@ enum BrainfInstructions {
 	bool BrainfInterpreter::expr() {
 		std::deque<unsigned int> openLoops;
 
-		for(std::size_t i = 0; i < m_program.length(); i++) {
+		for(std::size_t i = 0; i < m_program.tokens.size(); i++) {
 			if(m_program[i] == '[') {
 				openLoops.push_back(i);
 			} else if(m_program[i] == ']') {
@@ -299,7 +360,7 @@ enum BrainfInstructions {
 		std::size_t i = 0;
 
 		//Remove all characters but <>-+,.[]
-		for(std::size_t j = 0; j < m_program.length();) {
+		for(std::size_t j = 0; j < m_program.tokens.size();) {
 			char c = m_program[j];
 
 			if(c != SHIFT_LEFT && c != SHIFT_RIGHT && c != INCREMENT && c != DECREMENT &&
@@ -314,10 +375,10 @@ enum BrainfInstructions {
 			return;
 
 		//First Pass
-		while(i < m_program.length()) {
+		while(i < m_program.tokens.size()) {
 			char current = m_program.tokens[i].identifier;
 			char previous = i > 0 ? m_program.tokens[i - 1].identifier : 0;
-			char next = i < m_program.length() - 1 ? m_program.tokens[i + 1].identifier : 0;
+			char next = i < m_program.tokens.size() - 1 ? m_program.tokens[i + 1].identifier : 0;
 
 			if(current == SHIFT_LEFT || current == SHIFT_RIGHT ||
 			   current == INCREMENT  || current == DECREMENT) {
@@ -420,9 +481,9 @@ enum BrainfInstructions {
 			return;
 
 		//Second Pass
-		while(i < m_program.length()) {
+		while(i < m_program.tokens.size()) {
 			char current = m_program.tokens[i].identifier;
-			char next = i < m_program.length() - 1 ? m_program.tokens[i + 1].identifier : 0;
+			char next = i < m_program.tokens.size() - 1 ? m_program.tokens[i + 1].identifier : 0;
 
 			//Optimize for opposing operators +- ><
 			if(current == SHIFT_LEFT || current == SHIFT_RIGHT ||

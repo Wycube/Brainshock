@@ -18,14 +18,4 @@ namespace bs {
 		processed = true;
 	}
 
-	/**
-	 * Gets the length, it's really just here to help to get the size
-	 * and not have to check whether it's processed or not.
-	 *
-	 * @return the amount of characters/tokens in the program.
-	 */
-	size_t Program::length() {
-		return processed ? tokens.size() : program.length();
-	}
-
 }
