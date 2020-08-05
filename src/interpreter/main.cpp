@@ -300,6 +300,15 @@ int main(int argc, char *argv[]) {
 		bs::BrainfInterpreter interpreter = bs::BrainfInterpreter(std::cout);
 		std::ifstream file(options.path);
 
+		//Check for unused flags and warn
+		//-O1 and/or -O2 if -p is not set
+		if((options.flags[3] || options.flags[4]) && !options.flags[2]) {
+			std::cerr << "Warning: ";
+			if(options.flags[3]) std::cerr << "-O1 ";
+			if(options.flags[4]) std::cerr << "-O2 ";
+			std::cerr << "unused" << std::endl;
+		}
+
 		//Check for file validity
 		if(!std::filesystem::exists(options.path)) {
 			std::cerr << "Error: File provided does not exist" << std::endl;
