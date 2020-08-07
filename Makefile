@@ -17,7 +17,7 @@ else
 	endif
 endif
 
-_DEPS = Interpreter.hpp Brainf.hpp Memory.hpp Program.hpp
+_DEPS = Brainf.hpp Memory.hpp Program.hpp
 DEPS = $(patsubst %,$(INC_DIR)/%,$(_DEPS))
 
 _OBJ = main.o Brainf.o Memory.o Program.o

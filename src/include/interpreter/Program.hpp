@@ -13,21 +13,19 @@ namespace bs {
 	};
 
 	struct Program {
+		std::string program; //Raw program, as string
+		std::vector<Token> tokens; //Preprocessed into Token intermediates
+		bool processed;
 
-	std::string program;
-	std::vector<Token> tokens;
-	bool processed;
+		void tokenize();
 
-	void tokenize();
-	std::size_t length();
-
-	inline char& operator[](std::size_t index) {
-		if(processed) {
-			return tokens[index].identifier;
-		} else {
-			return program[index];
+		inline char& operator[](std::size_t index) {
+			if(processed) {
+				return tokens[index].identifier;
+			} else {
+				return program[index];
+			}
 		}
-	}
 	};
 
 }
