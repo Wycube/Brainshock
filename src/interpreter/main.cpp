@@ -28,7 +28,8 @@ static std::unordered_map<std::string, int> strToNum = {
 	{"b",  5},                 //Print out runtime after execution
 	{"md", 6},                 //Prints a dump of the entire memory
 	{"mp", 7},                 //Prints the current cell and some around it
-	{"pg",  8}                 //Prints the program thats going to be run, it would only be different if processed
+	{"pg", 8},                 //Prints the program thats going to be run, it would only be different if processed
+	{"d",  9}                  //Runs the program in debug mode, with extra error checking
 };
 
 static struct {
@@ -236,7 +237,8 @@ void evalLoop(bs::BrainfInterpreter &interpreter, std::stringbuf &buffer) {
 			auto start = std::chrono::steady_clock::now();
 			
 
-			if(!interpreter.run())
+			//-d should the program be ran in debug mode
+			if(options.flags[9] ? !interpreter.drun() : !interpreter.run())
 				std::cerr << "Error: " << interpreter.getError() << std::endl;
 
 
@@ -279,6 +281,7 @@ int main(int argc, char *argv[]) {
 		<< " -md          Display a dump of the entire memory after execution\n"
 		<< " -mp          Display the current cell and a few around it after execution"
 		<< " -pg          Display the program that was interpreted(should only change if preprocessed)"
+		<< " -d           Runs the program in debug mode, with extra error checking"
 		<< std::endl;
 
 		return 0;
@@ -338,12 +341,13 @@ int main(int argc, char *argv[]) {
 			//Timing start
 			auto start = std::chrono::steady_clock::now();	
 		
-
-			if(!interpreter.run()) {
+			//-d should the program be ran in debug mode
+			if(options.flags[9] ? !interpreter.drun() : !interpreter.run()) {
 				std::cerr << "Error: " << interpreter.getError() << std::endl;		
 				for(size_t i = interpreter.getInstPtr() - 30; i < interpreter.getInstPtr() + 30; i++) {
 					std::cout << interpreter.getProgram()[i];
 				}
+				std::cout << std::endl;
 			}
 
 			//Timing end
