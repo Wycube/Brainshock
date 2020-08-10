@@ -14,8 +14,8 @@
 
 //Semantic Versioning
 const int major = 0;
-const int minor = 2;
-const int patch = 1;
+const int minor = 3;
+const int patch = 0;
 
 //---------- Command Line / Args ----------//
 
@@ -27,11 +27,12 @@ static std::unordered_map<std::string, int> strToNum = {
 	{"O2", 4},                 //Optimizes the processed program a bit more
 	{"b",  5},                 //Print out runtime after execution
 	{"md", 6},                 //Prints a dump of the entire memory
-	{"mp", 7}                  //Prints the current cell and some around it
+	{"mp", 7},                 //Prints the current cell and some around it
+	{"pg",  8}                 //Prints the program thats going to be run, it would only be different if processed
 };
 
 static struct {
-	bool flags[8] = {false};
+	bool flags[9] = {false};
 	std::string path = "";
 	bool repl = true;
 } options;
@@ -176,7 +177,7 @@ void printInfo(bs::BrainfInterpreter &interpreter, std::chrono::microseconds run
 		
 		std::size_t length = program.processed ? program.tokens.size() : program.program.size();
 		for(std::size_t i = 0; i < length; i++)
-			std::cout << program[i] << (program.processed ? program.tokens[i].data : static_cast<char>(0));
+			std::cout << program[i] << (program.processed ? program.tokens[i].data : '\0');
 		std::cout << std::endl;
 	} 
 	if(comflags.dump)
@@ -203,6 +204,8 @@ void evalLoop(bs::BrainfInterpreter &interpreter, std::stringbuf &buffer) {
 		comflags.set[1] = true;
 	if(options.flags[7]) //-mp setting the "mem" command
 		comflags.set[3] = true;
+	if(options.flags[8]) //-p setting the "prog" command
+		comflags.set[0] = true;
 	comflags.clear(); //Just to reset the flags at the beginning	
 
 	//Check for unused flags and warn
@@ -275,6 +278,7 @@ int main(int argc, char *argv[]) {
 		<< " -b           Display the program's run time after execution\n"
 		<< " -md          Display a dump of the entire memory after execution\n"
 		<< " -mp          Display the current cell and a few around it after execution"
+		<< " -pg          Display the program that was interpreted(should only change if preprocessed)"
 		<< std::endl;
 
 		return 0;
@@ -351,6 +355,7 @@ int main(int argc, char *argv[]) {
 		comflags.time = options.flags[5];
 		comflags.dump = options.flags[6];
 		comflags.mem  = options.flags[7];
+		comflags.prog = options.flags[8];
 
 		printInfo(interpreter, delta);
 	}

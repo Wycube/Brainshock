@@ -85,14 +85,6 @@ enum BrainfInstructions {
 	}
 
 	bool BrainfInterpreter::stepProcessed() {
-		if(m_program.tokens.empty()) {
-			m_error = "No program provided";
-			return false;
-		} else if(m_instPtr > m_program.tokens.size()) {
-			m_error = "Execution gone past end of program";
-			return false;
-		}
-
 		Token inst = m_program.tokens[m_instPtr];
 
 		switch(inst.identifier) {
@@ -120,16 +112,31 @@ enum BrainfInstructions {
 			break;
 		}
 
+		m_instPtr++;
+
+		return true;
+	}
+	
+	//Debug version of stepProcessed
+	bool BrainfInterpreter::dstepProcessed() {
+		//This shouldn't ever happen
+		if(m_program.tokens.empty()) {
+			m_error = "No program provided";
+			return false;
+		} else if(m_instPtr > m_program.tokens.size()) {
+			m_error = "Execution gone past end of program";
+			return false;
+		}
+		
+		if(!stepProcessed()) return false;
+		
 		//Check for out-of-bounds memory access
-		std::string error = checkMemoryError(m_memory, inst.identifier, m_instPtr);
+		std::string error = checkMemoryError(m_memory, m_program[m_instPtr - 1], m_instPtr - 1);
 		if(error != "") {
 			m_error = error;
 			return false;
 		}
-
-
-		m_instPtr++;
-
+		
 		return true;
 	}
 
@@ -161,11 +168,6 @@ enum BrainfInstructions {
 	}
 
 	bool BrainfInterpreter::stepUnprocessed() {
-		if(m_instPtr > m_program.program.size()) {
-			m_error = "Execution gone past the end of the program instructions";
-			return false;
-		}
-
 		char inst = m_program.program[m_instPtr];
 		std::size_t jumpValue;
 		bool success;
@@ -183,7 +185,7 @@ enum BrainfInstructions {
 				jumpValue = handleStartLoop(m_memory[m_dataPtr], m_program, m_instPtr, success);
 
 				if(jumpValue == 0) {
-					m_jumpTable.push_back(m_instPtr);	
+					m_jumpTable.push(m_instPtr);	
 				} else if(success) {
 					m_instPtr = jumpValue;
 				} else {
@@ -204,9 +206,9 @@ enum BrainfInstructions {
 				}
 
 				if(m_memory[m_dataPtr] != 0) {
-					m_instPtr = m_jumpTable.back();
+					m_instPtr = m_jumpTable.top();
 				} else {
-					m_jumpTable.pop_back();
+					m_jumpTable.pop();
 				}
 			break;
 			case INPUT : m_memory[m_dataPtr] = getChar();
@@ -215,15 +217,28 @@ enum BrainfInstructions {
 			break;
 		}
 
+		m_instPtr++;
+
+		return true;
+	}
+	
+	//Debug version of stepUnprocessed
+	bool BrainfInterpreter::dstepUnprocessed() {
+		//This should never happen
+		if(m_instPtr > m_program.program.size()) {
+			m_error = "Execution gone past the end of the program instructions";
+			return false;
+		}
+		
+		if(!stepUnprocessed()) return false;
+		
 		//Check for out-of-bounds access
-		std::string error = checkMemoryError(m_memory, inst, m_instPtr);
+		std::string error = checkMemoryError(m_memory, m_program[m_instPtr - 1], m_instPtr - 1);
 		if(error != "") {
 			m_error = error;
 			return false;
 		}
-
-		m_instPtr++;
-
+		
 		return true;
 	}
 
@@ -237,6 +252,14 @@ enum BrainfInstructions {
 			return stepProcessed();
 		else
 			return stepUnprocessed();
+	}
+	
+	//Debug version of step, just calls debug functions
+	bool BrainfInterpreter::dstep() {
+		if(m_program.processed)
+			return dstepProcessed();
+		else
+			return dstepUnprocessed();
 	}
 
 	/**
@@ -294,6 +317,61 @@ enum BrainfInstructions {
 					}
 
 					if(!stepUnprocessed()) return false;
+				}
+			}
+		}
+
+		return true;
+	}
+	
+	//Debug version of run, oh boy
+	bool BrainfInterpreter::drun(float runSpeed) {
+		if(runSpeed < 0)
+			runSpeed = 0; //Just set zero for anything negative
+		
+		bool regulate = runSpeed != 0;
+
+		if(!regulate) {
+			if(m_program.processed) {
+				while(m_instPtr < m_program.tokens.size())
+					if(!dstepProcessed()) return false;
+			} else {
+				while(m_instPtr < m_program.program.size())
+					if(!dstepUnprocessed()) return false;
+			}
+		} else {
+			//Initialize variables for timing
+			int milliPerInst = regulate ? 1 / runSpeed : 0;
+			std::chrono::milliseconds delta;
+			auto execTime = std::chrono::milliseconds(milliPerInst);
+			auto currentTime = std::chrono::steady_clock::now();
+			auto lastTime = currentTime;
+
+			if(m_program.processed) {
+				while(m_instPtr < m_program.tokens.size()) {
+					currentTime = std::chrono::steady_clock::now();
+					delta = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - lastTime);
+					lastTime = currentTime;
+
+					//Should the execution be stopped for a bit to stay in time
+					if(delta > execTime) {
+						std::this_thread::sleep_for(delta - execTime);
+					}
+
+					if(!dstepProcessed()) return false;
+				}
+			} else {
+				while(m_instPtr < m_program.program.size()) {
+					currentTime = std::chrono::steady_clock::now();
+					delta = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - lastTime);
+					lastTime = currentTime;
+
+					//Should the execution be stopped for a bit to stay in time
+					if(delta > execTime) {
+						std::this_thread::sleep_for(delta - execTime);
+					}
+
+					if(!dstepUnprocessed()) return false;
 				}
 			}
 		}

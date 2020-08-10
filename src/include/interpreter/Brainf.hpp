@@ -5,6 +5,7 @@
 #include "Memory.hpp"
 
 #include <deque>
+#include <stack>
 #include <iostream>
 
 namespace bs {
@@ -17,6 +18,8 @@ namespace bs {
 		bool loadProgram(const char *program, bool process = true, bool resetDataPtr = true, unsigned int optimization = 2);
 		bool run(float runSpeed = 0);
 		bool step();
+		bool drun(float runSpeed = 0); //Debug versions
+		bool dstep();
 
 		//Getters
 		inline Program& getProgram()    { return m_program; }
@@ -28,7 +31,7 @@ namespace bs {
 	private:
 		
 		std::deque<char> m_inBuffer;
-		std::deque<std::size_t> m_jumpTable;
+		std::stack<std::size_t> m_jumpTable;
 		std::ostream &m_stream;
 		Program m_program;
 		Tape m_memory;
@@ -39,8 +42,10 @@ namespace bs {
 		char getChar();
 		bool stepProcessed();
 		bool stepUnprocessed();
+		bool dstepProcessed(); //Debug versions
+		bool dstepUnprocessed();
 		bool expr();
-		void preProcess(unsigned int optimization = 2);
+		void preProcess(unsigned int optimization);
 	};
 
 }
