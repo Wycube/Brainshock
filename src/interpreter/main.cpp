@@ -2,11 +2,9 @@
  * Copyright (c) 2019 Spencer Burton
  */
 
-#include <iostream>
 #include <sstream>
 #include <fstream>
 #include <filesystem>
-#include <chrono>
 #include <string>
 #include <unordered_map>
 
@@ -31,11 +29,12 @@ static std::unordered_map<std::string, int> strToNum = {
 	{"pg", 8},                 //Prints the program thats going to be run, it would only be different if processed
 	{"d",  9},                 //Runs the program in debug mode, with extra error checking
 	{"e", 10},                 //Exclude input, when timing the runtime exclude the time taken for input
-	{"-norun", 11}             //Don't execute the program just print processed program
+	{"n", 11},                 //Number input, convert digits in input to numbers instead of ascii
+	{"-norun", 12}             //Don't execute the program just print processed program
 };
 
 static struct {
-	bool flags[12] = {false};
+	bool flags[13] = {false};
 	std::string path = "";
 	bool repl = true;
 } options;
@@ -281,6 +280,7 @@ int main(int argc, char *argv[]) {
 		<< " -pg          Display the program that was interpreted(should only change if preprocessed)\n"
 		<< " -d           Runs the program in debug mode, with extra error checking\n"
 		<< " -e           Exclude input, when timing the runtime exclude the time taken for input\n"
+		<< " -n           Number input, convert digits in input to numbers instead of ascii\n"
 		<< " --norun      Does not run the program, but still prints processed program"
 		<< std::endl;
 
@@ -299,14 +299,16 @@ int main(int argc, char *argv[]) {
 		std::stringbuf buffer;
 		std::ostream stream(nullptr);
 		stream.rdbuf(&buffer);
-		bs::BrainfInterpreter interpreter = bs::BrainfInterpreter(stream);
+		//-n should digits inputted be converted to a number
+		bs::BrainfInterpreter interpreter = bs::BrainfInterpreter(stream, options.flags[11]);
 
 		evalLoop(interpreter, buffer);
 		return 0;
 		
 	//Standard run
 	} else {
-		bs::BrainfInterpreter interpreter = bs::BrainfInterpreter(std::cout);
+		//-n should digits inputted be converted to a number
+		bs::BrainfInterpreter interpreter = bs::BrainfInterpreter(std::cout, options.flags[11]);
 		std::ifstream file(options.path);
 
 		//TODO: Add better check for unused flags later
@@ -333,7 +335,7 @@ int main(int argc, char *argv[]) {
 			std::cerr << "Error: " << interpreter.getError() << std::endl;
 			return 4;
 		//--norun should the program be ran
-		} else if(!options.flags[11]){
+		} else if(!options.flags[12]){
 			//Timing start
 			auto start = std::chrono::steady_clock::now();	
 		
@@ -353,7 +355,7 @@ int main(int argc, char *argv[]) {
 
 		//Use the command struct and functions to print the information
 		//--norun should this information be displayed
-		if(!options.flags[11]) {
+		if(!options.flags[12]) {
 			comflags.time = options.flags[5];
 			comflags.dump = options.flags[6];
 			comflags.mem  = options.flags[7];

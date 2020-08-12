@@ -14,7 +14,7 @@ namespace bs {
 	class BrainfInterpreter {
 	public:
 
-		BrainfInterpreter(std::ostream &stream = std::cout, std::size_t memSize = 30000);
+		BrainfInterpreter(std::ostream &stream = std::cout, bool numInput = false, std::size_t memSize = 30000);
 
 		bool loadProgram(const char *program, bool process = true, bool resetDataPtr = true, bool resetInputTime = false, unsigned int optimization = 2);
 		bool run(float runSpeed = 0);
@@ -41,6 +41,7 @@ namespace bs {
 		std::size_t m_dataPtr = 0;
 		std::string m_error;
 		std::chrono::microseconds m_inputTime{0};
+		bool m_numInput;
 
 		char getChar();
 		bool stepProcessed();
