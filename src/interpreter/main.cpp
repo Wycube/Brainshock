@@ -29,11 +29,13 @@ static std::unordered_map<std::string, int> strToNum = {
 	{"md", 6},                 //Prints a dump of the entire memory
 	{"mp", 7},                 //Prints the current cell and some around it
 	{"pg", 8},                 //Prints the program thats going to be run, it would only be different if processed
-	{"d",  9}                  //Runs the program in debug mode, with extra error checking
+	{"d",  9},                 //Runs the program in debug mode, with extra error checking
+	{"e", 10},                 //Exclude input, when timing the runtime exclude the time taken for input
+	{"-norun", 11}             //Don't execute the program just print processed program
 };
 
 static struct {
-	bool flags[9] = {false};
+	bool flags[12] = {false};
 	std::string path = "";
 	bool repl = true;
 } options;
@@ -159,16 +161,16 @@ void printInfo(bs::BrainfInterpreter &interpreter, std::chrono::microseconds run
 	//Help message
 	if(comflags.help) {
 		std::cout << " Commands will print useful information about the state"
-			  << " of the interpreter.\n"
-			  << " Commands can be set to run everytime with \"set [command]\""
-			  << " and \"unset [command]\".\n\n"  
-			  << " help - Prints this help message\n"
-			  << " exit - Exits the REPL\n"
-			  << " prog - Prints the programs instructions, only useful with optimizing\n"
-			  << " dump - Prints entire memory, append base \"hexdump bindump decdump\"\n"
-			  << " mem  - Prints the memory at and around the current cell\n"
-			  << " time - Prints the runtime of the last program"
-			  << std::endl;
+				  << " of the interpreter.\n"
+				  << " Commands can be set to run everytime with \"set [command]\""
+				  << " and \"unset [command]\".\n\n"  
+				  << " help - Prints this help message\n"
+				  << " exit - Exits the REPL\n"
+				  << " prog - Prints the programs instructions, only useful with optimizing\n"
+				  << " dump - Prints entire memory, append base \"hexdump bindump decdump\"\n"
+				  << " mem  - Prints the memory at and around the current cell\n"
+				  << " time - Prints the runtime of the last program"
+				  << std::endl;
 
 		return; //Don't do anything else
 	} 
@@ -177,8 +179,11 @@ void printInfo(bs::BrainfInterpreter &interpreter, std::chrono::microseconds run
 		std::cout << "Program: ";
 		
 		std::size_t length = program.processed ? program.tokens.size() : program.program.size();
-		for(std::size_t i = 0; i < length; i++)
-			std::cout << program[i] << (program.processed ? program.tokens[i].data : '\0');
+		for(std::size_t i = 0; i < length; i++) {
+			std::cout << program[i];
+			if(program.processed)
+				std::cout << program.tokens[i].data;
+		}
 		std::cout << std::endl;
 	} 
 	if(comflags.dump)
@@ -209,15 +214,7 @@ void evalLoop(bs::BrainfInterpreter &interpreter, std::stringbuf &buffer) {
 		comflags.set[0] = true;
 	comflags.clear(); //Just to reset the flags at the beginning	
 
-	//Check for unused flags and warn
-	//-O1 and/or -O2 if -p is not set
-	if((options.flags[3] || options.flags[4]) && !options.flags[2]) {
-		std::cerr << "Warning: ";
-		if(options.flags[3]) std::cerr << "-O1 ";
-		if(options.flags[4]) std::cerr << "-O2 ";
-		std::cerr << "unused" << std::endl;
-	}
-
+	//TODO: Add better check for unused flags later
 
 	while(true) {
 		std::cout << ": "; //This symbol is arbitrary I just needed something thats not a brainf*** instruction
@@ -230,7 +227,7 @@ void evalLoop(bs::BrainfInterpreter &interpreter, std::stringbuf &buffer) {
 
 		//-p Process the program if set 
 		//-O1 and -O2 Specific optimizations
-		} else if(!interpreter.loadProgram(input.c_str(), options.flags[2], false, optLevel)) {
+		} else if(!interpreter.loadProgram(input.c_str(), options.flags[2], false, true, optLevel)) {
 			std::cerr << "Error: " << interpreter.getError() << std::endl;
 		} else {
 			//Timing Start
@@ -253,8 +250,9 @@ void evalLoop(bs::BrainfInterpreter &interpreter, std::stringbuf &buffer) {
 			buffer.str("");
 		}
 
-		//Print info from commands then clear them
-		printInfo(interpreter, delta);
+		//Print info from commands then clear 
+		//-e should the input time be subracted from the execution time
+		printInfo(interpreter, options.flags[10] ? delta - interpreter.getInputTime() : delta);
 		comflags.clear();
 	}
 }
@@ -279,9 +277,11 @@ int main(int argc, char *argv[]) {
 		<< " -O2          Optimizes the processed program a bit more past O1\n"
 		<< " -b           Display the program's run time after execution\n"
 		<< " -md          Display a dump of the entire memory after execution\n"
-		<< " -mp          Display the current cell and a few around it after execution"
-		<< " -pg          Display the program that was interpreted(should only change if preprocessed)"
-		<< " -d           Runs the program in debug mode, with extra error checking"
+		<< " -mp          Display the current cell and a few around it after execution\n"
+		<< " -pg          Display the program that was interpreted(should only change if preprocessed)\n"
+		<< " -d           Runs the program in debug mode, with extra error checking\n"
+		<< " -e           Exclude input, when timing the runtime exclude the time taken for input\n"
+		<< " --norun      Does not run the program, but still prints processed program"
 		<< std::endl;
 
 		return 0;
@@ -303,18 +303,13 @@ int main(int argc, char *argv[]) {
 
 		evalLoop(interpreter, buffer);
 		return 0;
+		
+	//Standard run
 	} else {
 		bs::BrainfInterpreter interpreter = bs::BrainfInterpreter(std::cout);
 		std::ifstream file(options.path);
 
-		//Check for unused flags and warn
-		//-O1 and/or -O2 if -p is not set
-		if((options.flags[3] || options.flags[4]) && !options.flags[2]) {
-			std::cerr << "Warning: ";
-			if(options.flags[3]) std::cerr << "-O1 ";
-			if(options.flags[4]) std::cerr << "-O2 ";
-			std::cerr << "unused" << std::endl;
-		}
+		//TODO: Add better check for unused flags later
 
 		//Check for file validity
 		if(!std::filesystem::exists(options.path)) {
@@ -334,10 +329,11 @@ int main(int argc, char *argv[]) {
 		std::chrono::microseconds delta;
 		
 		//-p should the program be preprocessed
-		if(!interpreter.loadProgram(buffer.str().c_str(), options.flags[2], true, optLevel)) {
-			std::cerr << "Error :" << interpreter.getError() << std::endl;
+		if(!interpreter.loadProgram(buffer.str().c_str(), options.flags[2], true, false, optLevel)) {
+			std::cerr << "Error: " << interpreter.getError() << std::endl;
 			return 4;
-		} else {
+		//--norun should the program be ran
+		} else if(!options.flags[11]){
 			//Timing start
 			auto start = std::chrono::steady_clock::now();	
 		
@@ -356,11 +352,15 @@ int main(int argc, char *argv[]) {
 		}
 
 		//Use the command struct and functions to print the information
-		comflags.time = options.flags[5];
-		comflags.dump = options.flags[6];
-		comflags.mem  = options.flags[7];
+		//--norun should this information be displayed
+		if(!options.flags[11]) {
+			comflags.time = options.flags[5];
+			comflags.dump = options.flags[6];
+			comflags.mem  = options.flags[7];
+		}
 		comflags.prog = options.flags[8];
 
-		printInfo(interpreter, delta);
+		//-e should the input time be subracted from the execution time
+		printInfo(interpreter, options.flags[10] ? delta - interpreter.getInputTime() : delta);
 	}
 }

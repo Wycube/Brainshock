@@ -1,6 +1,5 @@
 #include "Brainf.hpp"
 
-#include <chrono>
 #include <thread>
 
 namespace bs {
@@ -38,7 +37,7 @@ enum BrainfInstructions {
 		return error;
 	}
 	
-	bool BrainfInterpreter::loadProgram(const char *program, bool process, bool resetDataPtr, unsigned int optimization) {
+	bool BrainfInterpreter::loadProgram(const char *program, bool process, bool resetDataPtr, bool resetInputTime, unsigned int optimization) {
 		m_program = Program();
 		m_program.program = std::string(program);
 
@@ -46,6 +45,9 @@ enum BrainfInstructions {
 
 		if(resetDataPtr)
 			m_dataPtr = 0;
+		
+		if(resetInputTime)
+			m_inputTime = std::chrono::microseconds(0);
 
 		if(process) {
 			m_program.tokenize();
@@ -68,6 +70,7 @@ enum BrainfInstructions {
 
 		if(m_inBuffer.empty()) {
 			std::string input;
+			auto start = std::chrono::steady_clock::now(); //This is for the exlude input option
 			
 			//If there was nothing entered prompt again
 			while(input == "")
@@ -76,6 +79,8 @@ enum BrainfInstructions {
 			for(std::size_t i = 0; i < input.length(); i++) {
 				m_inBuffer.push_front(input[i]);
 			}
+			
+			m_inputTime += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - start);
 		}
 
 		temp = m_inBuffer.back();
@@ -106,9 +111,8 @@ enum BrainfInstructions {
 			break;
 			case CLEAR : m_memory[m_dataPtr] = 0;
 			break;
-			case COPY : m_memory[m_dataPtr + 1] = m_memory[m_dataPtr];
-				    m_memory[m_dataPtr + 2] = m_memory[m_dataPtr];
-				    m_memory[m_dataPtr]     = 0;
+			case COPY : m_memory[m_dataPtr + inst.data] += m_memory[m_dataPtr];
+						m_memory[m_dataPtr] = 0;
 			break;
 		}
 
@@ -505,21 +509,6 @@ enum BrainfInstructions {
 						i += 3;
 
 						special = true;
-					} else {
-						//Check for copy instruction
-						std::string expected = ">+>+<<]"; //Sequence is [->+>+<<]
-						std::string actual;
-                                                                                                                        
-						for(std::size_t j = 0; j < 7; j++) {
-							actual += m_program.tokens[i + j + 2].identifier;
-						}	
-						
-						if(actual == expected) {
-							newTokens.push_back(Token{COPY, 1});
-							i += 9;
-
-							special = true;
-						}
 					}
 				} else if(previous == END_LOOP) {
 					//Gets rid of loops that occur right after another loop
@@ -586,6 +575,40 @@ enum BrainfInstructions {
 				} else {
 					i++;
 				}
+			
+			//Checking for copy statements, aka things in the form of [-(> or <)+(< or >)] or similiar
+			//I should make it more general later
+			/*
+			} else if(current == START_LOOP) {
+				//[-(> or <)+(< or >)] form
+				if(next == DECREMENT) {
+					char after = (i + 1) < m_program.tokens.size() - 1 ? m_program.tokens[i + 2].identifier : 0;
+					if(after == SHIFT_RIGHT || after == SHIFT_LEFT) {
+						char shift = after; //Need to know what shift it is
+						after = (i + 2) < m_program.tokens.size() - 1 ? m_program.tokens[i + 3].identifier : 0;
+						if(after == INCREMENT) {
+							after = (i + 3) < m_program.tokens.size() - 1 ? m_program.tokens[i + 4].identifier : 0;
+							if(isOpposing(after, shift)) {
+								after = (i + 4) < m_program.tokens.size() - 1 ? m_program.tokens[i + 5].identifier : 0;
+								if(after == END_LOOP) {
+									//Replace the START_LOOP with the copy instruction and erase the rest
+									
+									//I'm assuming a lot of things here, like that the decrement, and increment
+									//are just one and that the shifts are the same
+									//I need to update this to check for that stuff
+									m_program.tokens[i] = Token{COPY, m_program.tokens[i + 2].data}; 
+									m_program.tokens.erase(m_program.tokens.begin() + i + 1);
+									m_program.tokens.erase(m_program.tokens.begin() + i + 2);
+									m_program.tokens.erase(m_program.tokens.begin() + i + 3);
+									m_program.tokens.erase(m_program.tokens.begin() + i + 4);
+									m_program.tokens.erase(m_program.tokens.begin() + i + 5);
+								}
+							}
+						}
+					}
+				}
+				i++;
+				*/
 			} else {
 				i++;
 			}

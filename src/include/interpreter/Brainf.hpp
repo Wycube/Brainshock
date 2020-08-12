@@ -7,6 +7,7 @@
 #include <deque>
 #include <stack>
 #include <iostream>
+#include <chrono>
 
 namespace bs {
 
@@ -15,7 +16,7 @@ namespace bs {
 
 		BrainfInterpreter(std::ostream &stream = std::cout, std::size_t memSize = 30000);
 
-		bool loadProgram(const char *program, bool process = true, bool resetDataPtr = true, unsigned int optimization = 2);
+		bool loadProgram(const char *program, bool process = true, bool resetDataPtr = true, bool resetInputTime = false, unsigned int optimization = 2);
 		bool run(float runSpeed = 0);
 		bool step();
 		bool drun(float runSpeed = 0); //Debug versions
@@ -27,6 +28,7 @@ namespace bs {
 		inline std::size_t getInstPtr() { return m_instPtr; }
 		inline std::size_t getDataPtr() { return m_dataPtr; }
 		inline std::string getError()   { return m_error; }
+		inline std::chrono::microseconds getInputTime() { return m_inputTime; }
 
 	private:
 		
@@ -38,6 +40,7 @@ namespace bs {
 		std::size_t m_instPtr = 0;
 		std::size_t m_dataPtr = 0;
 		std::string m_error;
+		std::chrono::microseconds m_inputTime{0};
 
 		char getChar();
 		bool stepProcessed();
