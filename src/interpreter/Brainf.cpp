@@ -488,7 +488,7 @@ enum BrainfInstructions {
 				//Counts instructions and uses that as data for a single
 				//instruction, like run length encoding
 
-				unsigned int sum = 1;
+				long long sum = 1;
 				char temp = next;
 
 				while(temp == current) {
