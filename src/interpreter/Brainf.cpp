@@ -603,15 +603,22 @@ enum BrainfInstructions {
 			//I should make it more general later
 			} else if(current == START_LOOP) {
 				//[-(> or <)+(< or >)] form
-				if(next == DECREMENT) {
+				//Make sure they only decrement by one
+				if(next == DECREMENT && m_program.tokens[i + 1].data == 1) {
 					char after = (i + 1) < m_program.tokens.size() - 1 ? m_program.tokens[i + 2].identifier : 0;
+					
 					if(after == SHIFT_RIGHT || after == SHIFT_LEFT) {
 						char shift = after; //Need to know what shift it is
+						long long data = m_program.tokens[i + 2].data;
 						after = (i + 2) < m_program.tokens.size() - 1 ? m_program.tokens[i + 3].identifier : 0;
-						if(after == INCREMENT) {
+						
+						if(after == INCREMENT && m_program.tokens[i + 3].data == 1) {
 							after = (i + 3) < m_program.tokens.size() - 1 ? m_program.tokens[i + 4].identifier : 0;
-							if(isOpposing(after, shift)) {
+							
+							//Also make sure shift values match up
+							if(isOpposing(after, shift) && m_program.tokens[i + 4].data == data) {
 								after = (i + 4) < m_program.tokens.size() - 1 ? m_program.tokens[i + 5].identifier : 0;
+								
 								if(after == END_LOOP) {
 									//Replace the START_LOOP with the copy instruction and erase the rest
 									
