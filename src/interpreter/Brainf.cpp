@@ -621,11 +621,6 @@ enum BrainfInstructions {
 								
 								if(after == END_LOOP) {
 									//Replace the START_LOOP with the copy instruction and erase the rest
-									
-									//I'm assuming a lot of things here, like that the decrement, and increment
-									//are just one and that the shifts are the same
-									//I need to update this later to check for that stuff
-									
 									//Gotta negate if it's a left shift
 									m_program.tokens[i] = Token{COPY, shift == SHIFT_RIGHT ? m_program.tokens[i + 2].data : -m_program.tokens[i + 2].data}; 
 									m_program.tokens.erase(m_program.tokens.begin() + i + 5);
