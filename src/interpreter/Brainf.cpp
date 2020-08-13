@@ -636,10 +636,6 @@ enum BrainfInstructions {
 				i++;
 			}
 		}
-		
-		for(size_t l = 0; l < m_program.tokens.size(); l++)
-			std::cout << m_program.tokens[l].identifier << m_program.tokens[l].data;
-		std::cout << std::endl;
 	}
 
 }
