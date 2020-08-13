@@ -9,7 +9,7 @@ namespace bs {
 
 	struct Token {
 		char identifier;
-		unsigned int data;
+		long data;
 	};
 
 	struct Program {

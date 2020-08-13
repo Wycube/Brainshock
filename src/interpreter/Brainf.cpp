@@ -533,6 +533,7 @@ enum BrainfInstructions {
 					}
 				} else if(previous == END_LOOP) {
 					//Gets rid of loops that occur right after another loop
+					//Again, usually for comments
 					char temp = next;
 					int count = 1;
 
@@ -540,6 +541,7 @@ enum BrainfInstructions {
 						count++;
 						temp = m_program.tokens[i + count].identifier;
 					}
+					count++; //Can't leave out the END_LOOP
 
 					i += count;
 
@@ -563,7 +565,7 @@ enum BrainfInstructions {
 		newTokens.clear();
 
 		i = 0;
-
+		
 
 		if(optimization < 2)
 			return;
@@ -596,10 +598,9 @@ enum BrainfInstructions {
 				} else {
 					i++;
 				}
-			
+				
 			//Checking for copy statements, aka things in the form of [-(> or <)+(< or >)] or similiar
 			//I should make it more general later
-			/*
 			} else if(current == START_LOOP) {
 				//[-(> or <)+(< or >)] form
 				if(next == DECREMENT) {
@@ -616,24 +617,29 @@ enum BrainfInstructions {
 									
 									//I'm assuming a lot of things here, like that the decrement, and increment
 									//are just one and that the shifts are the same
-									//I need to update this to check for that stuff
-									m_program.tokens[i] = Token{COPY, m_program.tokens[i + 2].data}; 
-									m_program.tokens.erase(m_program.tokens.begin() + i + 1);
-									m_program.tokens.erase(m_program.tokens.begin() + i + 2);
-									m_program.tokens.erase(m_program.tokens.begin() + i + 3);
-									m_program.tokens.erase(m_program.tokens.begin() + i + 4);
+									//I need to update this later to check for that stuff
+									
+									//Gotta negate if it's a left shift
+									m_program.tokens[i] = Token{COPY, shift == SHIFT_RIGHT ? m_program.tokens[i + 2].data : -m_program.tokens[i + 2].data}; 
 									m_program.tokens.erase(m_program.tokens.begin() + i + 5);
+									m_program.tokens.erase(m_program.tokens.begin() + i + 4);
+									m_program.tokens.erase(m_program.tokens.begin() + i + 3);
+									m_program.tokens.erase(m_program.tokens.begin() + i + 2);
+									m_program.tokens.erase(m_program.tokens.begin() + i + 1);
 								}
 							}
 						}
 					}
 				}
 				i++;
-				*/
 			} else {
 				i++;
 			}
 		}
+		
+		for(size_t l = 0; l < m_program.tokens.size(); l++)
+			std::cout << m_program.tokens[l].identifier << m_program.tokens[l].data;
+		std::cout << std::endl;
 	}
 
 }
