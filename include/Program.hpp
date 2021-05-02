@@ -47,11 +47,6 @@ namespace bs {
 	};
 
 	class IREmitter {
-	private:
-
-		Program m_source;
-		std::string m_error;
-
 	public:
 
 		IREmitter() { }
@@ -63,6 +58,11 @@ namespace bs {
 		Program emit();
 
 		inline std::string getError() { return m_error; };
+	
+	private:
+
+		Program m_source;
+		std::string m_error;
 	};
 
 }
