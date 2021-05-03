@@ -17,7 +17,7 @@ namespace bs {
 
     //No execution permission because buffers allocated this way cannot have execution and write privelages
     //at the same time, so another function will adjust the permissions later.
-    void* JITRuntime::createBuffer() {
+    void JITRuntime::createBuffer() {
     #if defined(PLATFORM_WINDOWS)
         SYSTEM_INFO si;
         GetSystemInfo(&si);

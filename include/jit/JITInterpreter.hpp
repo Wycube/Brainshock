@@ -24,7 +24,7 @@ namespace bs {
 
     private:
 
-        void* createBuffer();
+        void createBuffer();
         void freeBuffer();
         void finalizeBuffer();
 
@@ -38,7 +38,7 @@ namespace bs {
         JITInterpreter(std::ostream &stream = std::cout, std::size_t memSize = 30000);
 
         bool loadProgram(const char *program, bool process = true, bool resetDataPtr = true, unsigned int optimization = 2) override;
-		bool run(float runSpeed = 0) override; //Run speed doesn't matter now, cause it can't and shouldn't be controlled
+		bool run(float runSpeed = 0) override; //Run speed doesn't matter now, cause it can't be controlled, easily
 		bool step() override; //This doesn't do anything
 
     private:
@@ -46,7 +46,7 @@ namespace bs {
         JITRuntime m_runtime;
         x64Emitter m_emitter;
 
-        void printChar(char character); //A function to use in the jit assembly
+        void printChar(char character); //A function to print in the jit assembly, as an intermediate
 
     };
 
