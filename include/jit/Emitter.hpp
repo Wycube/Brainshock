@@ -8,6 +8,8 @@
 
 namespace bs {
 
+namespace jit {
+
     //64-bit registers
     enum x64Register : uint8_t {
         rax = 0,
@@ -61,6 +63,8 @@ namespace bs {
         void subb_at_reg(uint8_t value, x64Register reg);  // subb value, 0(%r)
         void add_to_reg(uint32_t value, x64Register reg);  // add imm32, %r
         void sub_to_reg(uint32_t value, x64Register reg);  // sub imm32, %r
+        void push_reg(x64Register reg);                    // push %r
+        void pop_reg(x64Register reg);                     // pop %r
 
 
     private:
@@ -68,6 +72,8 @@ namespace bs {
         std::vector<uint8_t> m_code;
     };
 
-}
+} //namespace jit
+
+} //namespace bs
 
 #endif //EMITTER_HPP

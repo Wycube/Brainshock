@@ -6,6 +6,8 @@
 
 namespace bs {
 
+namespace jit {
+
     //--------------- JIT Runtime class methods ---------------//
     JITRuntime::JITRuntime() : m_isExecutable(false) {
         createBuffer();
@@ -60,8 +62,10 @@ namespace bs {
         return m_isExecutable;
     }
 
+} //namespace jit
+
 
     //--------------- JIT Interpreter class methods ---------------//
 
 
-}
+} //namespace bs

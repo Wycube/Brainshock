@@ -2,6 +2,8 @@
 
 namespace bs {
 
+namespace jit {
+
     std::vector<uint8_t> x64Emitter::getCode() {
         return m_code;
     }
@@ -49,7 +51,7 @@ namespace bs {
 
     //Moves a 64 bit immediate value into reg
     void x64Emitter::movabs(uint64_t immediate, x64Register reg) {
-        if(reg <= rbp) {
+        if(reg <= rdi) {
             emitBytes({0x48, static_cast<uint8_t>(0xB8 + reg)}); 
         } else {
             emitBytes({0x49, static_cast<uint8_t>(0xB8 + (reg - 8))});
@@ -60,7 +62,7 @@ namespace bs {
 
     //Increments the value in reg
     void x64Emitter::inc(x64Register reg) {
-        if(reg <= rbp) {
+        if(reg <= rdi) {
             emitBytes({0x48, 0xFF, static_cast<uint8_t>(0xC0 + reg)});
         } else {
             emitBytes({0x49, 0xFF, static_cast<uint8_t>(0xC0 + (reg - 8))});
@@ -69,7 +71,7 @@ namespace bs {
 
     //Decrements the value in reg
     void x64Emitter::dec(x64Register reg) {
-        if(reg <= rbp) {
+        if(reg <= rdi) {
             emitBytes({0x48, 0xFF, static_cast<uint8_t>(0xC8 + reg)});
         } else {
             emitBytes({0x49, 0xFF, static_cast<uint8_t>(0xC8 + (reg - 8))});
@@ -79,16 +81,16 @@ namespace bs {
     //Adds the byte value to the byte pointed to by register reg
     //There is an offset from the pointer, the second to last operand, which isn't used right now, but might be useful later
     void x64Emitter::addb_at_reg(uint8_t value, x64Register reg) {
-        if(reg <= rbp) {
-            emitBytes({0x80, static_cast<uint8_t>(0x45 + reg), 0x00, value});
+        if(reg <= rdi) {
+            emitBytes({0x80, static_cast<uint8_t>(0x40 + reg), 0x00, value});
         } else {
-            emitBytes({0x41, 0x80, static_cast<uint8_t>(0x45 + (reg - 8)), 0x00, value});
+            emitBytes({0x41, 0x80, static_cast<uint8_t>(0x40 + (reg - 8)), 0x00, value});
         }
     }
     
     //Subtracts the byte value from the byte pointed to by register reg
     void x64Emitter::subb_at_reg(uint8_t value, x64Register reg) {
-        if(reg <= rbp) {
+        if(reg <= rdi) {
             emitBytes({0x80, static_cast<uint8_t>(0x68 + reg), 0x00, value});
         } else {
             emitBytes({0x41, 0x80, static_cast<uint8_t>(0x68 + (reg - 8)), 0x00, value});
@@ -99,7 +101,7 @@ namespace bs {
     void x64Emitter::add_to_reg(uint32_t value, x64Register reg) {
         if(reg == rax) {
             emitBytes({0x48, 0x05}); //This one is different, for some reason
-        } else if(reg <= rbp) {
+        } else if(reg <= rdi) {
             emitBytes({0x48, 0x81, static_cast<uint8_t>(0xC0 + reg)});
         } else {
             emitBytes({0x49, 0x81, static_cast<uint8_t>(0xC0 + (reg - 8))});
@@ -112,7 +114,7 @@ namespace bs {
     void x64Emitter::sub_to_reg(uint32_t value, x64Register reg) {
         if(reg == rax) {
             emitBytes({0x48, 0x2D}); //This one is different, for some reason
-        } else if(reg <= rbp) {
+        } else if(reg <= rdi) {
             emitBytes({0x48, 0x81, static_cast<uint8_t>(0xE8 + reg)});
         } else {
             emitBytes({0x49, 0x81, static_cast<uint8_t>(0xE8 + (reg - 8))});
@@ -120,5 +122,25 @@ namespace bs {
 
         emitInt(value);
     }
+
+    //Pushes a register onto the stack
+    void x64Emitter::push_reg(x64Register reg) {
+        if(reg <= rdi) {
+            emitBytes({static_cast<uint8_t>(0x50 + reg)});
+        } else {
+            emitBytes({0x41, static_cast<uint8_t>(0x50 + (reg - 8))});
+        }
+    }
+
+    //Pops a register off the stack
+    void x64Emitter::pop_reg(x64Register reg) {
+        if(reg <= rdi) {
+            emitBytes({static_cast<uint8_t>(0x58 + reg)});
+        } else {
+            emitBytes({0x41, static_cast<uint8_t>(0x58 + (reg - 8))});
+        }
+    }
+
+}
 
 }

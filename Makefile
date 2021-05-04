@@ -18,13 +18,13 @@ else
 	endif
 endif
 
-_DEPS = Interpreter.hpp Memory.hpp Program.hpp
+_DEPS = Interpreter.hpp Memory.hpp Program.hpp jit/Emitter.hpp jit/JITInterpreter.hpp jit/Platform.hpp
 DEPS = $(patsubst %,$(INC_DIR)/%,$(_DEPS))
 
-_OBJ = main.o Interpreter.o Memory.o Program.o
+_OBJ = testjit.o Interpreter.o Memory.o Program.o jit/Emitter.o jit/JITInterpreter.o
 OBJ = $(patsubst %,$(OBJ_DIR)/%,$(_OBJ))
 
-$(shell mkdir -p build/obj)
+$(shell mkdir -p build/obj/jit)
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp $(DEPS)
 	$(CXX) -c $(FLAGS) -o $@ $<

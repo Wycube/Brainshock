@@ -10,6 +10,8 @@
 
 namespace bs {
 
+namespace jit {
+
     using JITFunc = void (*)(uint64_t *tape_memory);
 
     class JITRuntime {
@@ -32,6 +34,8 @@ namespace bs {
         uint8_t *m_memory;
     };
 
+} //namespace jit
+
     class JITInterpreter : public Interpreter {
     public:
         
@@ -43,13 +47,13 @@ namespace bs {
 
     private:
 
-        JITRuntime m_runtime;
-        x64Emitter m_emitter;
+        jit::JITRuntime m_runtime;
+        jit::x64Emitter m_emitter;
 
         void printChar(char character); //A function to print in the jit assembly, as an intermediate
 
     };
 
-}
+} //namespace bs
 
 #endif //JIT_INTERPRETER_HPP
