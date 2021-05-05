@@ -22,23 +22,7 @@ namespace jit {
         }
     }
 
-    void x64Emitter::emitU32(uint32_t value) {
-        m_code.push_back(GET_BYTE(value, 0));
-        m_code.push_back(GET_BYTE(value, 1));
-        m_code.push_back(GET_BYTE(value, 2));
-        m_code.push_back(GET_BYTE(value, 3));
-    }
 
-    void x64Emitter::emitU64(uint64_t value) {
-        m_code.push_back(GET_BYTE(value, 0));
-        m_code.push_back(GET_BYTE(value, 1));
-        m_code.push_back(GET_BYTE(value, 2));
-        m_code.push_back(GET_BYTE(value, 3));
-        m_code.push_back(GET_BYTE(value, 4));
-        m_code.push_back(GET_BYTE(value, 5));
-        m_code.push_back(GET_BYTE(value, 6));
-        m_code.push_back(GET_BYTE(value, 7));
-    }
 
     //Select x86-64 Instructions
     //A lot of instructions change the prefix based on whether they are acting on registers
@@ -60,6 +44,30 @@ namespace jit {
         emitInt(immediate);
     }
 
+    //Moves a 32 bit immediate value into reg
+    void x64Emitter::mov(uint32_t immediate, x64Register reg) {
+        if(reg <= rdi) {
+            emitBytes({0x48, 0xC7, static_cast<uint8_t>(0xC0 + reg)}); 
+        } else {
+            emitBytes({0x49, 0xC7, static_cast<uint8_t>(0xC0 + (reg - 8))});
+        }
+
+        emitInt(immediate);
+    }
+
+    //Moves the contents of one register to another
+    void x64Emitter::mov(x64Register src, x64Register dest) {
+        uint8_t prefix = 0b01001000;
+        prefix |= dest > rdi ? 1 : 0;
+        prefix |= src > rdi ? 0b100 : 0;
+
+        uint8_t modrm = 0b11000000;
+        modrm |= src << 3;
+        modrm |= dest;
+
+        emitBytes({prefix, 0x89, modrm});
+    }
+
     //Increments the value in reg
     void x64Emitter::inc(x64Register reg) {
         if(reg <= rdi) {
@@ -79,7 +87,8 @@ namespace jit {
     }
 
     //Adds the byte value to the byte pointed to by register reg
-    //There is an offset from the pointer, the second to last operand, which isn't used right now, but might be useful later
+    //There is an offset from the pointer, the second to last operand, which is present because
+    //it is impossible to encode r13 without an offset and I don't want to add an edge case.
     void x64Emitter::addb_at_reg(uint8_t value, x64Register reg) {
         if(reg <= rdi) {
             emitBytes({0x80, static_cast<uint8_t>(0x40 + reg), 0x00, value});
@@ -139,6 +148,27 @@ namespace jit {
         } else {
             emitBytes({0x41, static_cast<uint8_t>(0x58 + (reg - 8))});
         }
+    }
+
+    //Compare the contents pointed to by the specified register with the byte value
+    void x64Emitter::cmpb_at_reg(uint8_t value, x64Register reg) {
+        if(reg <= rdi) {
+            emitBytes({0x80, static_cast<uint8_t>(0x78 + reg), 0x00, value});
+        } else {
+            emitBytes({0x41, 0x80, static_cast<uint8_t>(0x78 + (reg - 8)), 0x00, value});
+        }
+    }
+
+    //Jump if not zero, the address is relative
+    void x64Emitter::jnz(uint32_t relative) {
+        emitBytes({0x0F, 0x85});
+        emitInt(relative);
+    }
+
+    //Jump if zero, the address is relative
+    void x64Emitter::jz(uint32_t relative) {
+        emitBytes({0x0F, 0x84});
+        emitInt(relative);
     }
 
 }

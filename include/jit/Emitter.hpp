@@ -38,8 +38,6 @@ namespace jit {
         void clear();
 
         void emitBytes(std::vector<uint8_t> bytes);
-        void emitU32(uint32_t value);
-        void emitU64(uint64_t value);
 
         //Pushes a integer value into the byte vector in Little-Endian
         template<typename T, typename = typename std::enable_if<std::is_integral<T>::value, T>::type>
@@ -54,9 +52,16 @@ namespace jit {
         //Instructions
         //r13 will be the register storing the tape memory pointer
         //Assembly instructions are in AT&T syntax, i.e. op src, dest
+        //Since I'm only implementing a handful of instructions I won't bother with
+        //explicitly implementing prefixes and ModRM and that other garbage.
+
+        //Instructions to add:
+        // - call
 
         void ret();                                        // ret
         void movabs(uint64_t immediate, x64Register reg);  // movabs imm64, %r
+        void mov(uint32_t immediate, x64Register reg);     // mov imm32, %r
+        void mov(x64Register src, x64Register dest);       // mov %src, %dest
         void inc(x64Register reg);                         // inc %r
         void dec(x64Register reg);                         // dec %r
         void addb_at_reg(uint8_t value, x64Register reg);  // addb value, 0(%r) or in intel syntax: add BYTE PTR [%r + 0x0], value
@@ -65,6 +70,9 @@ namespace jit {
         void sub_to_reg(uint32_t value, x64Register reg);  // sub imm32, %r
         void push_reg(x64Register reg);                    // push %r
         void pop_reg(x64Register reg);                     // pop %r
+        void cmpb_at_reg(uint8_t value, x64Register reg);  // cmpb value, 0(%r)
+        void jnz(uint32_t relative);                       // jnz relative_address -- the same as jne
+        void jz(uint32_t relative);                        // jz relative_address -- the same as je
 
 
     private:
