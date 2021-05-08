@@ -7,34 +7,9 @@
 
 #include "Interpreter.hpp"
 #include "jit/Emitter.hpp"
+#include "jit/Runtime.hpp"
 
 namespace bs {
-
-namespace jit {
-
-    using JITFunc = void (*)(uint64_t *tape_memory);
-
-    class JITRuntime {
-    public:
-
-        JITRuntime();
-        ~JITRuntime();
-
-        void loadCode(const std::vector<uint8_t> &code);
-        void* getMemory();
-        bool isExecutable();
-
-    private:
-
-        void createBuffer();
-        void freeBuffer();
-        void finalizeBuffer();
-
-        bool m_isExecutable;
-        uint8_t *m_memory;
-    };
-
-} //namespace jit
 
     class JITInterpreter : public Interpreter {
     public:
@@ -48,7 +23,7 @@ namespace jit {
     private:
 
         jit::JITRuntime m_runtime;
-        jit::x64Emitter m_emitter;
+        jit::x86_64Emitter m_emitter;
 
         void printChar(char character); //A function to print in the jit assembly, as an intermediate
 

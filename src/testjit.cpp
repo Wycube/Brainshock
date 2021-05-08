@@ -3,7 +3,7 @@
 #include <cstdio>
 
 int main() {
-    bs::jit::x64Emitter emitter;
+    bs::jit::x86_64Emitter emitter;
     emitter.push_reg(bs::jit::r8);
     emitter.push_reg(bs::jit::rsi);
     emitter.movabs(255, bs::jit::r10);
@@ -21,17 +21,26 @@ int main() {
     emitter.sub_to_reg(2, bs::jit::rbp);
     emitter.subb_at_reg(2, bs::jit::r10);
     emitter.subb_at_reg(2, bs::jit::rbp);
+    emitter.emitLabel("yeet_2");
     emitter.inc(bs::jit::r13);
     emitter.inc(bs::jit::rcx);
     emitter.dec(bs::jit::r14);
     emitter.dec(bs::jit::rbx);
+    emitter.call_at_reg(bs::jit::rbx);
+    emitter.call_at_reg(bs::jit::r12);
     emitter.cmpb_at_reg(5, bs::jit::rcx);
     emitter.cmpb_at_reg(0, bs::jit::r15);
-    emitter.jnz(0x1000);
-    emitter.jz(0);
+    emitter.jnz("yeet_1");
+    emitter.jz("yeet_2");
     emitter.pop_reg(bs::jit::r8);
     emitter.pop_reg(bs::jit::rsi);
+    emitter.emitLabel("yeet_1");
     emitter.ret();
+
+    if(!emitter.resolveLabels()) {
+        std::fprintf(stderr, "Error: Labels failed to resolve!\n");
+        std::exit(-1);
+    }
 
     std::vector<uint8_t> code = emitter.getCode();
 

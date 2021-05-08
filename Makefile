@@ -18,10 +18,10 @@ else
 	endif
 endif
 
-_DEPS = Interpreter.hpp Memory.hpp Program.hpp jit/Emitter.hpp jit/JITInterpreter.hpp jit/Platform.hpp
+_DEPS = Interpreter.hpp Memory.hpp Program.hpp jit/Emitter.hpp jit/Runtime.hpp jit/JITInterpreter.hpp jit/Platform.hpp
 DEPS = $(patsubst %,$(INC_DIR)/%,$(_DEPS))
 
-_OBJ = testjit.o Interpreter.o Memory.o Program.o jit/Emitter.o jit/JITInterpreter.o
+_OBJ = testdrive.o Interpreter.o Memory.o Program.o jit/Emitter.o jit/Runtime.o jit/JITInterpreter.o
 OBJ = $(patsubst %,$(OBJ_DIR)/%,$(_OBJ))
 
 $(shell mkdir -p build/obj/jit)
