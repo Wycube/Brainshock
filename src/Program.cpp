@@ -40,7 +40,6 @@ namespace bs {
 	 */
 	IREmitter::IREmitter(const char *source) {
 		m_source.source = source;
-		m_source.tokenize();
 	}
 
 	/*
@@ -48,7 +47,6 @@ namespace bs {
 	 */
 	void IREmitter::loadSource(const char *source) {
 		m_source.source = source;
-		m_source.tokenize();
 	}
 
 	/**
@@ -90,7 +88,7 @@ namespace bs {
 				unsigned int sum = 1;
 				char temp = next;
 
-				while(temp == current) {
+				while(temp == current && (sum + i) < m_source.tokens.size() - 1) {
 					sum++;
 					temp = m_source.tokens[i + sum].identifier;
 				}
@@ -130,7 +128,7 @@ namespace bs {
 
 						special = true;
 					} else {
-						//Check for copy instruction
+						//Check for copy instruction, should be moved into the second pass later
 						std::string expected = ">+>+<<]"; //Sequence is [->+>+<<]
 						std::string actual;
                                                                                                                         
@@ -245,9 +243,14 @@ namespace bs {
 		}
 
 		if(!openLoops.empty())
-			m_error = "Too many '[' for close loops ']'";
+			m_error = "Too many '[' for closed loops ']'";
 
 		return openLoops.empty();
+	}
+
+	//Just does the tokenize method
+	void IREmitter::tokenize() {
+		m_source.tokenize();
 	}
 
 	Program IREmitter::emit() {

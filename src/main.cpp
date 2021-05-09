@@ -9,13 +9,14 @@
 #include <chrono>
 #include <string>
 #include <unordered_map>
+#include <memory>
 
 #include "Interpreter.hpp"
 
 //Semantic Versioning
 const int major = 0;
 const int minor = 3;
-const int patch = 0;
+const int patch = 2;
 
 //---------- Command Line / Args ----------//
 
@@ -153,8 +154,8 @@ bool parseCommand(std::string str) {
 }
 
 //Prints whatever the set commands are suppose to
-void printInfo(bs::BasicInterpreter &interpreter, std::chrono::microseconds runtime) {
-	bs::Program &program = interpreter.getProgram();
+void printInfo(std::shared_ptr<bs::Interpreter> interpreter, std::chrono::microseconds runtime) {
+	bs::Program &program = interpreter->getProgram();
 
 	//Help message
 	if(comflags.help) {
@@ -182,9 +183,9 @@ void printInfo(bs::BasicInterpreter &interpreter, std::chrono::microseconds runt
 		std::cout << std::endl;
 	} 
 	if(comflags.dump)
-		interpreter.getMemory().fDump(comflags.dumpBase, true); //I'll just keep the ascii on
+		interpreter->getMemory().fDump(comflags.dumpBase, true); //I'll just keep the ascii on
 	if(comflags.mem)
-		interpreter.getMemory().fPrint(interpreter.getDataPtr());
+		interpreter->getMemory().fPrint(interpreter->getDataPtr());
 	if(comflags.time)
 		std::cout << "Finished in " << static_cast<double>(runtime.count() / 1000.0) << "ms or " << static_cast<double>(runtime.count() / 1000000.0)<< "s" << std::endl; //Divide by a thousand for milliseconds and a million for seconds
 }
@@ -192,7 +193,7 @@ void printInfo(bs::BasicInterpreter &interpreter, std::chrono::microseconds runt
 /*
  * A basic REPL, with the commands aswell.
  */
-void evalLoop(bs::BasicInterpreter &interpreter, std::stringbuf &buffer) {
+void evalLoop(std::shared_ptr<bs::Interpreter> interpreter, std::stringbuf &buffer) {
 	std::string input;
 	std::chrono::microseconds delta;
 
@@ -228,15 +229,15 @@ void evalLoop(bs::BasicInterpreter &interpreter, std::stringbuf &buffer) {
 
 		//-p Process the program if set 
 		//-O1 and -O2 Specific optimizations
-		} else if(!interpreter.loadProgram(input.c_str(), options.flags[2], false, optLevel)) {
-			std::cerr << "Error: " << interpreter.getError() << std::endl;
+		} else if(!interpreter->loadProgram(input.c_str(), options.flags[2], false, optLevel)) {
+			std::cerr << "Error: " << interpreter->getError() << std::endl;
 		} else {
 			//Timing Start
 			auto start = std::chrono::steady_clock::now();
 			
 
-			if(!interpreter.run())
-				std::cerr << "Error: " << interpreter.getError() << std::endl;
+			if(!interpreter->run())
+				std::cerr << "Error: " << interpreter->getError() << std::endl;
 
 
 			//Timing End
@@ -294,12 +295,12 @@ int main(int argc, char *argv[]) {
 		std::stringbuf buffer;
 		std::ostream stream(nullptr);
 		stream.rdbuf(&buffer);
-		bs::BasicInterpreter interpreter = bs::BasicInterpreter(stream);
+		std::shared_ptr<bs::Interpreter> interpreter = std::make_shared<bs::BasicInterpreter>(stream);
 
 		evalLoop(interpreter, buffer);
 		return 0;
 	} else {
-		bs::BasicInterpreter interpreter = bs::BasicInterpreter(std::cout);
+		std::shared_ptr<bs::Interpreter> interpreter = std::make_shared<bs::BasicInterpreter>();
 		std::ifstream file(options.path);
 
 		//Check for unused flags and warn
@@ -329,18 +330,17 @@ int main(int argc, char *argv[]) {
 		std::chrono::microseconds delta;
 		
 		//-p should the program be preprocessed
-		if(!interpreter.loadProgram(buffer.str().c_str(), options.flags[2], true, optLevel)) {
-			std::cerr << "Error :" << interpreter.getError() << std::endl;
+		if(!interpreter->loadProgram(buffer.str().c_str(), options.flags[2], true, optLevel)) {
+			std::cerr << "Error :" << interpreter->getError() << std::endl;
 			return 4;
 		} else {
 			//Timing start
-			auto start = std::chrono::steady_clock::now();	
-		
+			auto start = std::chrono::steady_clock::now();
 
-			if(!interpreter.run()) {
-				std::cerr << "Error: " << interpreter.getError() << std::endl;		
-				for(size_t i = interpreter.getInstPtr() - 30; i < interpreter.getInstPtr() + 30; i++) {
-					std::cout << interpreter.getProgram()[i];
+			if(!interpreter->run()) {
+				std::cerr << "Error: " << interpreter->getError() << std::endl;		
+				for(size_t i = interpreter->getInstPtr() - 30; i < interpreter->getInstPtr() + 30; i++) {
+					std::cout << interpreter->getProgram()[i];
 				}
 			}
 

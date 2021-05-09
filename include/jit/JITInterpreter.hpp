@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <vector>
+#include <stack>
 #include <iostream>
 
 #include "Interpreter.hpp"
@@ -17,6 +18,7 @@ namespace jit {
     public:
         
         JITInterpreter(std::ostream &stream = std::cout, std::size_t memSize = 30000);
+        ~JITInterpreter();
 
         bool loadProgram(const char *program, bool process = true, bool resetDataPtr = true, unsigned int optimization = 2) override;
 		bool run(float runSpeed = 0) override; //Run speed doesn't matter now, cause it can't be controlled, easily at least
@@ -27,8 +29,11 @@ namespace jit {
         JITRuntime m_runtime;
         x86_64Emitter m_jit_emitter;
 
-        void printChar(char c); //A function to print in the jit assembly, as an intermediate
         bool compile();
+        bool compileInstr(Token instr, unsigned int label_counter, std::stack<unsigned int> &label_stack);
+        bool compileInstr(char instr, unsigned int label_counter, std::stack<unsigned int> &label_stack);
+
+        friend char func_getChar(JITInterpreter *instance);
     };
 
 } //namespace jit

@@ -20,7 +20,7 @@ namespace bs {
 		Tape(std::size_t size = 0);
 		~Tape() { delete[] m_cells; }
 
-		Tape& operator=(Tape const &other) { m_size = other.m_size; m_cells = new unsigned char[m_size]; memcpy(m_cells, other.m_cells, m_size); return *this; }
+		Tape& operator=(Tape const &other) { m_size = other.m_size; delete[] m_cells; m_cells = new unsigned char[m_size]; memcpy(m_cells, other.m_cells, m_size); return *this; }
 
 		void fPrint(int cell);
 		void fDump(DUMP_BASE base = BASE_HEX, bool ascii = false);

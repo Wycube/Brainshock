@@ -70,6 +70,60 @@ namespace jit {
         emitBytes({prefix, 0x89, modrm});
     }
 
+    //Moves a 8-bit immediate value into the memory pointed to by the register
+    void x86_64Emitter::mov_at_reg(uint8_t immediate, x64GPRegister reg) {
+        if(reg <= rdi) {
+            emitBytes({0xC7});
+
+            if(reg == rsp) {
+                emitBytes({0x04, 0x24});
+            } else if(reg == rbp) {
+                emitBytes({0x45, 0x00});
+            } else {
+                emitBytes({reg});
+            }
+
+            emitInt(immediate);
+        } else {
+            emitBytes({0x41, 0xC7});
+
+            if(reg == r12) {
+                emitBytes({0x04, 0x24});
+            } else if(reg == r13) {
+                emitBytes({0x45, 0x00});
+            } else {
+                emitBytes({static_cast<uint8_t>(reg - 8)});
+            }
+
+            emitInt(immediate);
+        }
+    }
+
+    //Moves the lowest 8-bits of rax into the memory pointed to by the register, for byte return values
+    void x86_64Emitter::mov_al_at_reg(x64GPRegister reg) {
+        if(reg <= rdi) {
+            emitBytes({0x88});
+
+            if(reg == rsp) {
+                emitBytes({0x04, 0x24});
+            } else if(reg == rbp) {
+                emitBytes({0x45, 0x00});
+            } else {
+                emitBytes({reg});
+            }
+        } else {
+            emitBytes({0x41, 0x88});
+
+            if(reg == r12) {
+                emitBytes({0x04, 0x24});
+            } else if(reg == r13) {
+                emitBytes({0x45, 0x00});
+            } else {
+                emitBytes({static_cast<uint8_t>(reg - 8)});
+            }
+        }
+    }
+
     //Increments the value in reg
     void x86_64Emitter::inc(x64GPRegister reg) {
         if(reg <= rdi) {
@@ -122,7 +176,7 @@ namespace jit {
     }
 
     //Subtracts the integer value from the value in register reg
-    void x86_64Emitter::sub_to_reg(uint32_t value, x64GPRegister reg) {
+    void x86_64Emitter::sub_from_reg(uint32_t value, x64GPRegister reg) {
         if(reg == rax) {
             emitBytes({0x48, 0x2D}); //This one is different, for some reason
         } else if(reg <= rdi) {

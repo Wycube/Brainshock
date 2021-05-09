@@ -17,8 +17,8 @@ int main() {
     emitter.add_to_reg(0x55005500, bs::jit::rax);
     emitter.addb_at_reg(2, bs::jit::r10);
     emitter.addb_at_reg(2, bs::jit::rsi);
-    emitter.sub_to_reg(2, bs::jit::r10);
-    emitter.sub_to_reg(2, bs::jit::rbp);
+    emitter.sub_from_reg(2, bs::jit::r10);
+    emitter.sub_from_reg(2, bs::jit::rbp);
     emitter.subb_at_reg(2, bs::jit::r10);
     emitter.subb_at_reg(2, bs::jit::rbp);
     emitter.emitLabel("yeet_2");

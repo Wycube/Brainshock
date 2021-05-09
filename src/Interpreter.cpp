@@ -51,9 +51,11 @@ namespace bs {
 
 	//--------------- Interpreter Methods and Constructors ---------------//
 
-	Interpreter::Interpreter(std::ostream &stream, std::size_t memSize) : m_stream(stream) {
+	Interpreter::Interpreter(std::ostream &stream, std::size_t memSize) : m_stream(stream), m_instPtr(0), m_dataPtr(0) {
 		m_memory = Tape(memSize);
 	}
+
+	Interpreter::~Interpreter() { }
 
 	char Interpreter::getChar() {
 		char temp;
@@ -81,6 +83,8 @@ namespace bs {
 
 	BasicInterpreter::BasicInterpreter(std::ostream &stream, std::size_t memSize) : Interpreter(stream, memSize) { }
 	
+	BasicInterpreter::~BasicInterpreter() { }
+
 	bool BasicInterpreter::loadProgram(const char *program, bool process, bool resetDataPtr, unsigned int optimization) {
 		m_emitter.loadSource(program);
 
@@ -90,15 +94,15 @@ namespace bs {
 			m_dataPtr = 0;
 
 		if(process) {
-			m_program.tokenize();
+			m_emitter.tokenize();
 
-			if(!m_emitter.expr()) return false; //Program has invalid syntax
+			if(!m_emitter.expr()) { m_error = m_emitter.getError(); return false; } //Program has invalid syntax
 
 			if(optimization > 0) {
 				m_emitter.optimize(optimization);
 
 				//This is called to update the jump locations of the brackets
-				if(!m_emitter.expr()) return false; //If there was an error in the optimizing, which shouldn't happen
+				if(!m_emitter.expr()) { m_error = m_emitter.getError(); return false; } //If there was an error in the optimizing, which shouldn't happen
 			}
 		}
 
@@ -254,8 +258,9 @@ namespace bs {
 				while(m_instPtr < m_program.tokens.size())
 					if(!stepProcessed()) return false;
 			} else {
-				while(m_instPtr < m_program.source.size())
+				while(m_instPtr < m_program.source.size()) {
 					if(!stepUnprocessed()) return false;
+				}
 			}
 		} else {
 			//Initialize variables for timing

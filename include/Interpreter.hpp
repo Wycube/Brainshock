@@ -14,6 +14,7 @@ namespace bs {
     public:
 
         Interpreter(std::ostream &stream = std::cout, std::size_t memSize = 30000);
+		virtual ~Interpreter();
 
         virtual bool loadProgram(const char *program, bool process = true, bool resetDataPtr = true, unsigned int optimization = 2) = 0;
 		virtual bool run(float runSpeed = 0) = 0;
@@ -33,8 +34,8 @@ namespace bs {
 		IREmitter m_emitter;
 		Tape m_memory;
 		Program m_program;
-		std::size_t m_instPtr = 0;
-		std::size_t m_dataPtr = 0;
+		std::size_t m_instPtr;
+		std::size_t m_dataPtr;
 		std::string m_error;
 
 		char getChar();
@@ -45,6 +46,7 @@ namespace bs {
 	public:
 
 		BasicInterpreter(std::ostream &stream = std::cout, std::size_t memSize = 30000);
+		~BasicInterpreter();
 
 		bool loadProgram(const char *program, bool process = true, bool resetDataPtr = true, unsigned int optimization = 2) override;
 		bool run(float runSpeed = 0) override;

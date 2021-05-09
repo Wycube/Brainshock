@@ -26,7 +26,7 @@ namespace jit {
         SYSTEM_INFO si;
         GetSystemInfo(&si);
         m_memory = (uint8_t*)VirtualAlloc(nullptr, si.dwPageSize, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
-    #elif defined(PLATFORM_LINUX) || defined(PLATFORM_MACOS)
+    #else
         long page_size = sysconf(_SC_PAGESIZE);
         m_memory = (uint8_t*)mmap(nullptr, page_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
     #endif
@@ -38,7 +38,7 @@ namespace jit {
 
         #if defined(PLATFORM_WINDOWS)
             VirtualFree(m_memory, 0, MEM_RELEASE);
-        #elif defined(PLATFORM_LINUX) || defined(PLATFORM_MACOS)
+        #else
             long page_size = sysconf(_SC_PAGESIZE);
             munmap(m_memory, page_size);
         #endif
@@ -48,7 +48,7 @@ namespace jit {
         #if defined(PLATFORM_WINDOWS)
             DWORD old;
             VirtualProtect(m_memory, sizeof(*m_memory), PAGE_EXECUTE_READ, &old);
-        #elif defined(PLATFORM_LINUX) || defined(PLATFORM_MACOS)
+        #else
             mprotect(m_memory, sizeof(*m_memory), PROT_READ | PROT_EXEC);
         #endif
 

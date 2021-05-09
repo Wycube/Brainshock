@@ -1,1 +1,1 @@
-add_executable(bsi main.cpp Interpreter.cpp Memory.cpp Program.cpp)
+add_executable(bsi main.cpp Interpreter.cpp Memory.cpp Program.cpp jit/Emitter.cpp jit/Runtime.cpp jit/JITInterpreter.cpp)

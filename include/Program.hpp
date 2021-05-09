@@ -20,6 +20,8 @@ namespace bs {
 		std::vector<Token> tokens; //Preprocessed into Token intermediates
 		bool processed;
 
+		Program() : processed(false) { }
+
 		void tokenize();
 
 		inline char& operator[](std::size_t index) {
@@ -55,6 +57,7 @@ namespace bs {
 		void loadSource(const char *source);
 		void optimize(unsigned int level = 2);
 		bool expr();
+		void tokenize();
 		Program emit();
 
 		inline std::string getError() { return m_error; };
