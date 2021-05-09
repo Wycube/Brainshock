@@ -99,7 +99,7 @@ namespace bs {
 
 				//This is called to update the jump locations of the brackets
 				if(!m_emitter.expr()) return false; //If there was an error in the optimizing, which shouldn't happen
-			}	
+			}
 		}
 
 		m_program = m_emitter.emit();
