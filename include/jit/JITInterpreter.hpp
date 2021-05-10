@@ -17,7 +17,7 @@ namespace jit {
     class JITInterpreter : public Interpreter {
     public:
         
-        JITInterpreter(std::ostream &stream = std::cout, std::size_t memSize = 30000);
+        JITInterpreter(std::ostream &stream = std::cout, bool numInput = false, std::size_t memSize = 30000);
         ~JITInterpreter();
 
         bool loadProgram(const char *program, bool process = true, bool resetDataPtr = true, unsigned int optimization = 2) override;

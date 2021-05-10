@@ -13,7 +13,7 @@ namespace bs {
     class Interpreter {
     public:
 
-        Interpreter(std::ostream &stream = std::cout, std::size_t memSize = 30000);
+        Interpreter(std::ostream &stream = std::cout, bool numInput = false, std::size_t memSize = 30000);
 		virtual ~Interpreter();
 
         virtual bool loadProgram(const char *program, bool process = true, bool resetDataPtr = true, unsigned int optimization = 2) = 0;
@@ -37,6 +37,7 @@ namespace bs {
 		std::size_t m_instPtr;
 		std::size_t m_dataPtr;
 		std::string m_error;
+		bool m_numInput;
 
 		char getChar();
     };
@@ -45,7 +46,7 @@ namespace bs {
     class BasicInterpreter : public Interpreter {
 	public:
 
-		BasicInterpreter(std::ostream &stream = std::cout, std::size_t memSize = 30000);
+		BasicInterpreter(std::ostream &stream = std::cout, bool numInput = false, std::size_t memSize = 30000);
 		~BasicInterpreter();
 
 		bool loadProgram(const char *program, bool process = true, bool resetDataPtr = true, unsigned int optimization = 2) override;

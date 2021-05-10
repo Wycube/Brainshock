@@ -36,13 +36,15 @@ static std::unordered_map<std::string, int> strToNum = {
 	{"b",  5},                 //Print out runtime after execution
 	{"md", 6},                 //Prints a dump of the entire memory
 	{"mp", 7},                 //Prints the current cell and some around it
+	{"n", 8},                  //Number input, convert digits in input to numbers instead of ascii
+	{"-norun", 9},             //Don't execute the program just print processed program
 #if defined(USE_JIT)
-	{"j",  8}                  //Use the jit interpreter instead of the basic one
+	{"j",  10}                 //Use the jit interpreter instead of the basic one
 #endif
 };
 
 static struct {
-	bool flags[9] = {false};
+	bool flags[11] = {false};
 	std::string path = "";
 	bool repl = true;
 } options;
@@ -219,11 +221,10 @@ void evalLoop(std::shared_ptr<bs::Interpreter> interpreter, std::stringbuf &buff
 	comflags.clear(); //Just to reset the flags at the beginning	
 
 	//Check for unused flags and warn
-	//-O1 and/or -O2 if -p is not set
+	//warn about --norun, it has no effect for the repl
 	if((options.flags[3] || options.flags[4]) && !options.flags[2]) {
 		std::cerr << "Warning: ";
-		if(options.flags[3]) std::cerr << "-O1 ";
-		if(options.flags[4]) std::cerr << "-O2 ";
+		if(options.flags[9]) std::cerr << "-norun ";
 		std::cerr << "unused" << std::endl;
 	}
 
@@ -311,13 +312,13 @@ int main(int argc, char *argv[]) {
 		std::shared_ptr<bs::Interpreter> interpreter;
 		
 	#if defined(USE_JIT)
-		if(options.flags[8]) {
-			interpreter = std::make_shared<bs::jit::JITInterpreter>(stream);
+		if(options.flags[10]) {
+			interpreter = std::make_shared<bs::jit::JITInterpreter>(stream, options.flags[8]);
 		} else {
-			interpreter = std::make_shared<bs::BasicInterpreter>(stream);
+			interpreter = std::make_shared<bs::BasicInterpreter>(stream, options.flags[8]);
 		}
 	#else
-		interpreter = std::make_shared<bs::BasicInterpreter>(stream);
+		interpreter = std::make_shared<bs::BasicInterpreter>(stream, options.flags[8]);
 	#endif
 
 		evalLoop(interpreter, buffer);
@@ -326,13 +327,13 @@ int main(int argc, char *argv[]) {
 		std::shared_ptr<bs::Interpreter> interpreter;
 
 		#if defined(USE_JIT)
-		if(options.flags[8]) {
-			interpreter = std::make_shared<bs::jit::JITInterpreter>();
+		if(options.flags[10]) {
+			interpreter = std::make_shared<bs::jit::JITInterpreter>(std::cout, options.flags[8]);
 		} else {
-			interpreter = std::make_shared<bs::BasicInterpreter>();
+			interpreter = std::make_shared<bs::BasicInterpreter>(std::cout, options.flags[8]);
 		}
 	#else
-		interpreter = std::make_shared<bs::BasicInterpreter>();
+		interpreter = std::make_shared<bs::BasicInterpreter>(std::cout, options.flags[8]);
 	#endif
 
 		std::ifstream file(options.path);
@@ -367,7 +368,7 @@ int main(int argc, char *argv[]) {
 		if(!interpreter->loadProgram(buffer.str().c_str(), options.flags[2], true, optLevel)) {
 			std::cerr << "Error :" << interpreter->getError() << std::endl;
 			return 4;
-		} else {
+		} else if(!options.flags[9]) {
 			//Timing start
 			auto start = std::chrono::steady_clock::now();
 
