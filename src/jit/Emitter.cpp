@@ -1,3 +1,7 @@
+#include "config.hpp"
+
+#if defined(USE_JIT)
+
 #include "jit/Emitter.hpp"
 
 #include <algorithm>
@@ -304,3 +308,5 @@ namespace jit {
 }
 
 }
+
+#endif

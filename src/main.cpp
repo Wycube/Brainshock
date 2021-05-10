@@ -2,6 +2,8 @@
  * Copyright (c) 2019 Spencer Burton
  */
 
+// TODO: Fix random segfaults
+
 #include <iostream>
 #include <sstream>
 #include <fstream>
@@ -11,8 +13,12 @@
 #include <unordered_map>
 #include <memory>
 
+#include "config.hpp"
 #include "Interpreter.hpp"
+
+#if defined(USE_JIT)
 #include "jit/JITInterpreter.hpp"
+#endif
 
 //Semantic Versioning
 const int major = 0;
@@ -30,7 +36,9 @@ static std::unordered_map<std::string, int> strToNum = {
 	{"b",  5},                 //Print out runtime after execution
 	{"md", 6},                 //Prints a dump of the entire memory
 	{"mp", 7},                 //Prints the current cell and some around it
+#if defined(USE_JIT)
 	{"j",  8}                  //Use the jit interpreter instead of the basic one
+#endif
 };
 
 static struct {
@@ -280,7 +288,9 @@ int main(int argc, char *argv[]) {
 		<< " -b           Display the program's run time after execution\n"
 		<< " -md          Display a dump of the entire memory after execution\n"
 		<< " -mp          Display the current cell and a few around it after execution\n"
+	#if defined(USE_JIT)
 		<< " -j           Use the x86_64 JIT recompiler instead of the basic interpreter"
+	#endif
 		<< std::endl;
 
 		return 0;
@@ -300,22 +310,30 @@ int main(int argc, char *argv[]) {
 		stream.rdbuf(&buffer);
 		std::shared_ptr<bs::Interpreter> interpreter;
 		
+	#if defined(USE_JIT)
 		if(options.flags[8]) {
 			interpreter = std::make_shared<bs::jit::JITInterpreter>(stream);
 		} else {
 			interpreter = std::make_shared<bs::BasicInterpreter>(stream);
 		}
+	#else
+		interpreter = std::make_shared<bs::BasicInterpreter>(stream);
+	#endif
 
 		evalLoop(interpreter, buffer);
 		return 0;
 	} else {
 		std::shared_ptr<bs::Interpreter> interpreter;
 
+		#if defined(USE_JIT)
 		if(options.flags[8]) {
 			interpreter = std::make_shared<bs::jit::JITInterpreter>();
 		} else {
 			interpreter = std::make_shared<bs::BasicInterpreter>();
 		}
+	#else
+		interpreter = std::make_shared<bs::BasicInterpreter>();
+	#endif
 
 		std::ifstream file(options.path);
 

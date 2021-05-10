@@ -1,3 +1,7 @@
+#include "config.hpp"
+
+#if defined(USE_JIT)
+
 #include "jit/Runtime.hpp"
 
 #include <cassert>
@@ -96,3 +100,5 @@ namespace jit {
 } //namespace jit
 
 } //namespace bs
+
+#endif

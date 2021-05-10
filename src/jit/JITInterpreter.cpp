@@ -1,3 +1,7 @@
+#include "config.hpp"
+
+#if defined(USE_JIT)
+
 #include "jit/JITInterpreter.hpp"
 
 #include "jit/Platform.hpp"
@@ -233,3 +237,5 @@ namespace jit {
 } //namespace jit
 
 } //namespace bs
+
+#endif
