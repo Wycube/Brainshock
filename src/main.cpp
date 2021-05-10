@@ -2,6 +2,8 @@
  * Copyright (c) 2019 Spencer Burton
  */
 
+// TODO: Fix random segfaults
+
 #include <iostream>
 #include <sstream>
 #include <fstream>
@@ -9,13 +11,19 @@
 #include <chrono>
 #include <string>
 #include <unordered_map>
+#include <memory>
 
-#include "Brainf.hpp"
+#include "config.hpp"
+#include "Interpreter.hpp"
+
+#if defined(USE_JIT)
+#include "jit/JITInterpreter.hpp"
+#endif
 
 //Semantic Versioning
 const int major = 0;
-const int minor = 2;
-const int patch = 1;
+const int minor = 3;
+const int patch = 3;
 
 //---------- Command Line / Args ----------//
 
@@ -27,11 +35,14 @@ static std::unordered_map<std::string, int> strToNum = {
 	{"O2", 4},                 //Optimizes the processed program a bit more
 	{"b",  5},                 //Print out runtime after execution
 	{"md", 6},                 //Prints a dump of the entire memory
-	{"mp", 7}                  //Prints the current cell and some around it
+	{"mp", 7},                 //Prints the current cell and some around it
+#if defined(USE_JIT)
+	{"j",  8}                  //Use the jit interpreter instead of the basic one
+#endif
 };
 
 static struct {
-	bool flags[8] = {false};
+	bool flags[9] = {false};
 	std::string path = "";
 	bool repl = true;
 } options;
@@ -76,6 +87,8 @@ void parseArgs(int argc, char *argv[]) {
 			}
 		}
 	}
+
+	if(options.flags[strToNum["O1"]] || options.flags[strToNum["O2"]]) { options.flags[2] = true; }
 }
 
 
@@ -151,8 +164,8 @@ bool parseCommand(std::string str) {
 }
 
 //Prints whatever the set commands are suppose to
-void printInfo(bs::BrainfInterpreter &interpreter, std::chrono::microseconds runtime) {
-	bs::Program &program = interpreter.getProgram();
+void printInfo(std::shared_ptr<bs::Interpreter> interpreter, std::chrono::microseconds runtime) {
+	bs::Program &program = interpreter->getProgram();
 
 	//Help message
 	if(comflags.help) {
@@ -174,15 +187,15 @@ void printInfo(bs::BrainfInterpreter &interpreter, std::chrono::microseconds run
 	if(comflags.prog) {
 		std::cout << "Program: ";
 		
-		std::size_t length = program.processed ? program.tokens.size() : program.program.size();
+		std::size_t length = program.processed ? program.tokens.size() : program.source.size();
 		for(std::size_t i = 0; i < length; i++)
 			std::cout << program[i] << (program.processed ? program.tokens[i].data : static_cast<char>(0));
 		std::cout << std::endl;
 	} 
 	if(comflags.dump)
-		interpreter.getMemory().fDump(comflags.dumpBase, true); //I'll just keep the ascii on
+		interpreter->getMemory().fDump(comflags.dumpBase, true); //I'll just keep the ascii on
 	if(comflags.mem)
-		interpreter.getMemory().fPrint(interpreter.getDataPtr());
+		interpreter->getMemory().fPrint(interpreter->getDataPtr());
 	if(comflags.time)
 		std::cout << "Finished in " << static_cast<double>(runtime.count() / 1000.0) << "ms or " << static_cast<double>(runtime.count() / 1000000.0)<< "s" << std::endl; //Divide by a thousand for milliseconds and a million for seconds
 }
@@ -190,7 +203,7 @@ void printInfo(bs::BrainfInterpreter &interpreter, std::chrono::microseconds run
 /*
  * A basic REPL, with the commands aswell.
  */
-void evalLoop(bs::BrainfInterpreter &interpreter, std::stringbuf &buffer) {
+void evalLoop(std::shared_ptr<bs::Interpreter> interpreter, std::stringbuf &buffer) {
 	std::string input;
 	std::chrono::microseconds delta;
 
@@ -226,15 +239,15 @@ void evalLoop(bs::BrainfInterpreter &interpreter, std::stringbuf &buffer) {
 
 		//-p Process the program if set 
 		//-O1 and -O2 Specific optimizations
-		} else if(!interpreter.loadProgram(input.c_str(), options.flags[2], false, optLevel)) {
-			std::cerr << "Error: " << interpreter.getError() << std::endl;
+		} else if(!interpreter->loadProgram(input.c_str(), options.flags[2], false, optLevel)) {
+			std::cerr << "Error: " << interpreter->getError() << std::endl;
 		} else {
 			//Timing Start
 			auto start = std::chrono::steady_clock::now();
 			
 
-			if(!interpreter.run())
-				std::cerr << "Error: " << interpreter.getError() << std::endl;
+			if(!interpreter->run())
+				std::cerr << "Error: " << interpreter->getError() << std::endl;
 
 
 			//Timing End
@@ -274,7 +287,10 @@ int main(int argc, char *argv[]) {
 		<< " -O2          Optimizes the processed program a bit more past O1\n"
 		<< " -b           Display the program's run time after execution\n"
 		<< " -md          Display a dump of the entire memory after execution\n"
-		<< " -mp          Display the current cell and a few around it after execution"
+		<< " -mp          Display the current cell and a few around it after execution\n"
+	#if defined(USE_JIT)
+		<< " -j           Use the x86_64 JIT recompiler instead of the basic interpreter"
+	#endif
 		<< std::endl;
 
 		return 0;
@@ -292,12 +308,33 @@ int main(int argc, char *argv[]) {
 		std::stringbuf buffer;
 		std::ostream stream(nullptr);
 		stream.rdbuf(&buffer);
-		bs::BrainfInterpreter interpreter = bs::BrainfInterpreter(stream);
+		std::shared_ptr<bs::Interpreter> interpreter;
+		
+	#if defined(USE_JIT)
+		if(options.flags[8]) {
+			interpreter = std::make_shared<bs::jit::JITInterpreter>(stream);
+		} else {
+			interpreter = std::make_shared<bs::BasicInterpreter>(stream);
+		}
+	#else
+		interpreter = std::make_shared<bs::BasicInterpreter>(stream);
+	#endif
 
 		evalLoop(interpreter, buffer);
 		return 0;
 	} else {
-		bs::BrainfInterpreter interpreter = bs::BrainfInterpreter(std::cout);
+		std::shared_ptr<bs::Interpreter> interpreter;
+
+		#if defined(USE_JIT)
+		if(options.flags[8]) {
+			interpreter = std::make_shared<bs::jit::JITInterpreter>();
+		} else {
+			interpreter = std::make_shared<bs::BasicInterpreter>();
+		}
+	#else
+		interpreter = std::make_shared<bs::BasicInterpreter>();
+	#endif
+
 		std::ifstream file(options.path);
 
 		//Check for unused flags and warn
@@ -327,18 +364,17 @@ int main(int argc, char *argv[]) {
 		std::chrono::microseconds delta;
 		
 		//-p should the program be preprocessed
-		if(!interpreter.loadProgram(buffer.str().c_str(), options.flags[2], true, optLevel)) {
-			std::cerr << "Error :" << interpreter.getError() << std::endl;
+		if(!interpreter->loadProgram(buffer.str().c_str(), options.flags[2], true, optLevel)) {
+			std::cerr << "Error :" << interpreter->getError() << std::endl;
 			return 4;
 		} else {
 			//Timing start
-			auto start = std::chrono::steady_clock::now();	
-		
+			auto start = std::chrono::steady_clock::now();
 
-			if(!interpreter.run()) {
-				std::cerr << "Error: " << interpreter.getError() << std::endl;		
-				for(size_t i = interpreter.getInstPtr() - 30; i < interpreter.getInstPtr() + 30; i++) {
-					std::cout << interpreter.getProgram()[i];
+			if(!interpreter->run()) {
+				std::cerr << "Error: " << interpreter->getError() << std::endl;		
+				for(size_t i = interpreter->getInstPtr() - 30; i < interpreter->getInstPtr() + 30; i++) {
+					std::cout << interpreter->getProgram()[i];
 				}
 			}
 

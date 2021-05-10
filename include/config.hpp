@@ -1,0 +1,1 @@
+#define USE_JIT //Only x86_64 is supported so this should be disabled on other architectures
