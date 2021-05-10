@@ -21,7 +21,7 @@ namespace jit {
 
     //--------------- JIT Interpreter class methods ---------------//
 
-    JITInterpreter::JITInterpreter(std::ostream &stream, std::size_t memSize) : Interpreter(stream, memSize) { }
+    JITInterpreter::JITInterpreter(std::ostream &stream, bool numInput, std::size_t memSize) : Interpreter(stream, numInput, memSize) { }
 
     JITInterpreter::~JITInterpreter() { }
 

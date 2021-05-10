@@ -51,7 +51,7 @@ namespace bs {
 
 	//--------------- Interpreter Methods and Constructors ---------------//
 
-	Interpreter::Interpreter(std::ostream &stream, std::size_t memSize) : m_stream(stream), m_instPtr(0), m_dataPtr(0) {
+	Interpreter::Interpreter(std::ostream &stream, bool numInput, std::size_t memSize) : m_stream(stream), m_numInput(numInput), m_instPtr(0), m_dataPtr(0) {
 		m_memory = Tape(memSize);
 	}
 
@@ -75,13 +75,33 @@ namespace bs {
 		temp = m_inBuffer.back();
 		m_inBuffer.pop_back();
 
+		//-n should the input be converted, if possible
+		if(m_numInput) {
+			if(std::isdigit(temp)) {
+				std::string num;
+				num += temp;
+				temp = m_inBuffer.back();
+				
+				//Keep getting digits as long as it is under 256
+				while(std::isdigit(temp) && !m_inBuffer.empty()) {
+					if(std::stoi(num + temp) < 256) {
+						num += temp;
+						m_inBuffer.pop_back();
+					} else break;
+					temp = m_inBuffer.back();
+				}
+				
+				temp = static_cast<char>(std::stoi(num));
+			}
+		}
+
 		return temp;
 	}
 
 
 	//--------------- BasicInterpreter Implementation ---------------//
 
-	BasicInterpreter::BasicInterpreter(std::ostream &stream, std::size_t memSize) : Interpreter(stream, memSize) { }
+	BasicInterpreter::BasicInterpreter(std::ostream &stream, bool numInput, std::size_t memSize) : Interpreter(stream, numInput, memSize) { }
 	
 	BasicInterpreter::~BasicInterpreter() { }
 
