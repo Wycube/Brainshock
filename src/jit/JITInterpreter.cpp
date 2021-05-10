@@ -30,7 +30,7 @@ namespace jit {
 			m_dataPtr = 0;
 
 		if(process) {
-			m_program.tokenize();
+			m_emitter.tokenize();
 
 			if(!m_emitter.expr()) { m_error = m_emitter.getError(); return false; } //Program has invalid syntax
 
@@ -48,8 +48,12 @@ namespace jit {
     }
 
     bool JITInterpreter::run(float runSpeed) {
-        JITFunc func = reinterpret_cast<JITFunc>(m_runtime.getMemory());
+        // for(const auto &byte : m_jit_emitter.getCode()) {
+        //     printf("%0.2X ", byte);
+        // }
 
+        m_runtime.loadCode(m_jit_emitter.getCode());
+        JITFunc func = reinterpret_cast<JITFunc>(m_runtime.getMemory());
         func((uint64_t*)m_memory.m_cells);
 
         return true;
@@ -67,6 +71,12 @@ namespace jit {
 
         m_jit_emitter.movabs(reinterpret_cast<uint64_t>(func_printChar), r14);
         m_jit_emitter.movabs(reinterpret_cast<uint64_t>(func_getChar), r15);
+        
+        #if defined(PLATFORM_WINDOWS)
+        m_jit_emitter.mov(rcx, r13);
+        #else
+        m_jit_emitter.mov(rdi, r13);
+        #endif
 
         std::size_t size = m_program.processed ? m_program.tokens.size() : m_program.source.size();
         unsigned int label_counter = 0;
@@ -78,6 +88,8 @@ namespace jit {
             } else {
                 if(!compileInstr(m_program.source[m_instPtr], label_counter, label_stack)) { m_jit_emitter.clear(); return false; }
             }
+
+            m_instPtr++;
         }
 
         m_jit_emitter.pop_reg(r15);
@@ -94,7 +106,7 @@ namespace jit {
         return true;
     }
 
-    bool JITInterpreter::compileInstr(Token instr, unsigned int label_counter, std::stack<unsigned int> &label_stack) {
+    bool JITInterpreter::compileInstr(Token instr, unsigned int &label_counter, std::stack<unsigned int> &label_stack) {
         switch(instr.identifier) {
             case SHIFT_RIGHT : m_jit_emitter.add_to_reg(instr.data, r13);
             break;
@@ -147,14 +159,22 @@ namespace jit {
             break;
             case CLEAR : m_jit_emitter.mov_at_reg(0, r13);
             break;
-            case COPY : //Later
+            case COPY : 
+                //Move the value in the current cell to the next two, then clear the current cell
+                m_jit_emitter.mov_at_reg(r13, rax);
+                m_jit_emitter.inc(r13);
+                m_jit_emitter.mov_al_at_reg(r13);
+                m_jit_emitter.inc(r13);
+                m_jit_emitter.mov_al_at_reg(r13);
+                m_jit_emitter.sub_from_reg(2, r13);
+                m_jit_emitter.mov_at_reg(0, r13);
             break;
         }
 
         return true;
     }
 
-    bool JITInterpreter::compileInstr(char instr, unsigned int label_counter, std::stack<unsigned int> &label_stack) {
+    bool JITInterpreter::compileInstr(char instr, unsigned int &label_counter, std::stack<unsigned int> &label_stack) {
         switch(instr) {
             case SHIFT_RIGHT : m_jit_emitter.inc(r13);
             break;

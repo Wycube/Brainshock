@@ -25,8 +25,11 @@ namespace jit {
         void createBuffer();
         void freeBuffer();
         void protectBuffer();
+        void resizeBuffer(size_t pages);
 
         bool m_isExecutable;
+        size_t m_page_size;
+        size_t m_mem_size;
         uint8_t *m_memory;
     };
 

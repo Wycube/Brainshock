@@ -70,26 +70,27 @@ namespace jit {
         //Since I'm only implementing a handful of instructions I won't bother with
         //explicitly implementing prefixes and ModRM and that other garbage.
 
-        void ret();                                            // ret
-        void movabs(uint64_t immediate, x64GPRegister reg);    // movabs imm64, %r
-        void mov(uint32_t immediate, x64GPRegister reg);       // mov imm32, %r
-        void mov(x64GPRegister src, x64GPRegister dest);       // mov %src, %dest
-        void mov_at_reg(uint8_t immediate, x64GPRegister reg); // movb imm8, (%r)
-        void mov_al_at_reg(x64GPRegister reg);                 // movb %al, (%r)
-        void inc(x64GPRegister reg);                           // inc %r
-        void dec(x64GPRegister reg);                           // dec %r
-        void addb_at_reg(uint8_t value, x64GPRegister reg);    // addb value, 0(%r) or in intel syntax: add BYTE PTR [%r + 0x0], value
-        void subb_at_reg(uint8_t value, x64GPRegister reg);    // subb value, 0(%r)
-        void add_to_reg(uint32_t value, x64GPRegister reg);    // add imm32, %r
-        void sub_from_reg(uint32_t value, x64GPRegister reg);  // sub imm32, %r
-        void push_reg(x64GPRegister reg);                      // push %r
-        void pop_reg(x64GPRegister reg);                       // pop %r
-        void cmpb_at_reg(uint8_t value, x64GPRegister reg);    // cmpb value, 0(%r)
-        void jnz(int32_t relative);                            // jnz relative_address -- the same as jne
-        void jz(int32_t relative);                             // jz relative_address -- the same as je
-        void jnz(const std::string &label_name);               // a jnz but with a label to be backpatched later
-        void jz(const std::string &label_name);                // a jz but with a label to be backpatched later
-        void call_at_reg(x64GPRegister reg);                   // call %r -- indirect absolute memory addressing with the register
+        void ret();                                             // ret
+        void movabs(uint64_t immediate, x64GPRegister reg);     // movabs imm64, %r
+        void mov(uint32_t immediate, x64GPRegister reg);        // mov imm32, %r
+        void mov(x64GPRegister src, x64GPRegister dest);        // mov %src, %dest
+        void mov_at_reg(x64GPRegister src, x64GPRegister dest); // movb (%src), %dest
+        void mov_at_reg(uint8_t immediate, x64GPRegister reg);  // movb imm8, (%r)
+        void mov_al_at_reg(x64GPRegister reg);                  // movb %al, (%r)
+        void inc(x64GPRegister reg);                            // inc %r
+        void dec(x64GPRegister reg);                            // dec %r
+        void addb_at_reg(uint8_t value, x64GPRegister reg);     // addb value, 0(%r) or in intel syntax: add BYTE PTR [%r + 0x0], value
+        void subb_at_reg(uint8_t value, x64GPRegister reg);     // subb value, 0(%r)
+        void add_to_reg(uint32_t value, x64GPRegister reg);     // add imm32, %r
+        void sub_from_reg(uint32_t value, x64GPRegister reg);   // sub imm32, %r
+        void push_reg(x64GPRegister reg);                       // push %r
+        void pop_reg(x64GPRegister reg);                        // pop %r
+        void cmpb_at_reg(uint8_t value, x64GPRegister reg);     // cmpb value, 0(%r)
+        void jnz(int32_t relative);                             // jnz relative_address -- the same as jne
+        void jz(int32_t relative);                              // jz relative_address -- the same as je
+        void jnz(const std::string &label_name);                // a jnz but with a label to be backpatched later
+        void jz(const std::string &label_name);                 // a jz but with a label to be backpatched later
+        void call_at_reg(x64GPRegister reg);                    // call %r -- indirect absolute memory addressing with the register
 
         void emitLabel(const std::string &label_name);
         bool resolveLabels();

@@ -70,10 +70,23 @@ namespace jit {
         emitBytes({prefix, 0x89, modrm});
     }
 
+    //Moves the byte pointed to by src into the lowest byte of dest
+    void x86_64Emitter::mov_at_reg(x64GPRegister src, x64GPRegister dest) {
+        uint8_t prefix = 0b01001000;
+        prefix |= dest > rdi ? 1 : 0;
+        prefix |= src > rdi ? 0b100 : 0;
+
+        uint8_t modrm = 0b11000000;
+        modrm |= src << 3;
+        modrm |= dest;
+
+        emitBytes({prefix, 0x8A, modrm});
+    }
+
     //Moves a 8-bit immediate value into the memory pointed to by the register
     void x86_64Emitter::mov_at_reg(uint8_t immediate, x64GPRegister reg) {
         if(reg <= rdi) {
-            emitBytes({0xC7});
+            emitBytes({0xC6});
 
             if(reg == rsp) {
                 emitBytes({0x04, 0x24});
@@ -85,7 +98,7 @@ namespace jit {
 
             emitInt(immediate);
         } else {
-            emitBytes({0x41, 0xC7});
+            emitBytes({0x41, 0xC6});
 
             if(reg == r12) {
                 emitBytes({0x04, 0x24});

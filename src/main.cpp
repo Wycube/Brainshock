@@ -12,11 +12,12 @@
 #include <memory>
 
 #include "Interpreter.hpp"
+#include "jit/JITInterpreter.hpp"
 
 //Semantic Versioning
 const int major = 0;
 const int minor = 3;
-const int patch = 2;
+const int patch = 3;
 
 //---------- Command Line / Args ----------//
 
@@ -28,11 +29,12 @@ static std::unordered_map<std::string, int> strToNum = {
 	{"O2", 4},                 //Optimizes the processed program a bit more
 	{"b",  5},                 //Print out runtime after execution
 	{"md", 6},                 //Prints a dump of the entire memory
-	{"mp", 7}                  //Prints the current cell and some around it
+	{"mp", 7},                 //Prints the current cell and some around it
+	{"j",  8}                  //Use the jit interpreter instead of the basic one
 };
 
 static struct {
-	bool flags[8] = {false};
+	bool flags[9] = {false};
 	std::string path = "";
 	bool repl = true;
 } options;
@@ -277,7 +279,8 @@ int main(int argc, char *argv[]) {
 		<< " -O2          Optimizes the processed program a bit more past O1\n"
 		<< " -b           Display the program's run time after execution\n"
 		<< " -md          Display a dump of the entire memory after execution\n"
-		<< " -mp          Display the current cell and a few around it after execution"
+		<< " -mp          Display the current cell and a few around it after execution\n"
+		<< " -j           Use the x86_64 JIT recompiler instead of the basic interpreter"
 		<< std::endl;
 
 		return 0;
@@ -295,12 +298,25 @@ int main(int argc, char *argv[]) {
 		std::stringbuf buffer;
 		std::ostream stream(nullptr);
 		stream.rdbuf(&buffer);
-		std::shared_ptr<bs::Interpreter> interpreter = std::make_shared<bs::BasicInterpreter>(stream);
+		std::shared_ptr<bs::Interpreter> interpreter;
+		
+		if(options.flags[8]) {
+			interpreter = std::make_shared<bs::jit::JITInterpreter>(stream);
+		} else {
+			interpreter = std::make_shared<bs::BasicInterpreter>(stream);
+		}
 
 		evalLoop(interpreter, buffer);
 		return 0;
 	} else {
-		std::shared_ptr<bs::Interpreter> interpreter = std::make_shared<bs::BasicInterpreter>();
+		std::shared_ptr<bs::Interpreter> interpreter;
+
+		if(options.flags[8]) {
+			interpreter = std::make_shared<bs::jit::JITInterpreter>();
+		} else {
+			interpreter = std::make_shared<bs::BasicInterpreter>();
+		}
+
 		std::ifstream file(options.path);
 
 		//Check for unused flags and warn

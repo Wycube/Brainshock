@@ -30,8 +30,8 @@ namespace jit {
         x86_64Emitter m_jit_emitter;
 
         bool compile();
-        bool compileInstr(Token instr, unsigned int label_counter, std::stack<unsigned int> &label_stack);
-        bool compileInstr(char instr, unsigned int label_counter, std::stack<unsigned int> &label_stack);
+        bool compileInstr(Token instr, unsigned int &label_counter, std::stack<unsigned int> &label_stack);
+        bool compileInstr(char instr, unsigned int &label_counter, std::stack<unsigned int> &label_stack);
 
         friend char func_getChar(JITInterpreter *instance);
     };

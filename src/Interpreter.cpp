@@ -143,7 +143,7 @@ namespace bs {
 			break;
 			case COPY : m_memory[m_dataPtr + 1] = m_memory[m_dataPtr];
 				    m_memory[m_dataPtr + 2] = m_memory[m_dataPtr];
-				    m_memory[m_dataPtr]     = 0;
+				    m_memory[m_dataPtr] = 0;
 			break;
 		}
 
